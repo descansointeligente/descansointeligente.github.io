@@ -26,3 +26,15 @@ The project is built as a **Static Site** (HTML/CSS/JS) hosted on **GitHub Pages
 - **Mobile First**: Google indexes the mobile version of the site first. Ensure all features work perfectly on mobile.
 - **Speed**: Avoid adding heavy libraries or large unoptimized images.
 - **Accessibility**: Use semantic HTML and ARIA labels where necessary (e.g., mobile menu).
+
+## Git Workflow
+We follow a standard **Git Flow** strategy:
+- `main`: Production-ready code.
+- `develop`: Integration branch for ongoing development.
+- `feature/*`: Development branches for new features (e.g., `feature/header-refactor`).
+
+**Rules**:
+1. Never commit directly to `main`.
+2. Create feature branches from `develop`.
+3. Merge features into `develop` via Pull Request (or merge locally if solo).
+4. Release to `main` by merging `develop`.
