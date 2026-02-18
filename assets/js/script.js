@@ -53,6 +53,30 @@
           closeMenu();
         }
       });
+
+      /* Mobile Dropdown Toggles */
+      const dropdownToggles = navContainer.querySelectorAll('.dropdown-toggle');
+      dropdownToggles.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const parent = btn.parentElement;
+          const wasActive = parent.classList.contains('active');
+
+          /* Optional: Close other dropdowns */
+          /*
+          navContainer.querySelectorAll('.nav-item-has-children.active').forEach(item => {
+            if (item !== parent) {
+              item.classList.remove('active');
+              item.querySelector('.dropdown-toggle').setAttribute('aria-expanded', 'false');
+            }
+          });
+          */
+
+          parent.classList.toggle('active');
+          btn.setAttribute('aria-expanded', !wasActive);
+        });
+      });
     }
 
     /* --- Header scroll effect --- */
