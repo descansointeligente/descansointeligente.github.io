@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
 Sitemap: https://descansointeligente.es/sitemap.xml
