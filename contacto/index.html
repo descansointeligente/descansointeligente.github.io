@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contacto | Descanso Inteligente</title>
+    <meta name="description"
+        content="Ponte en contacto con el equipo de Descanso Inteligente. Formulario de consultas sobre ergonomía y productos.">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://descansointeligente.es/contacto/">
+
+    <meta property="og:title" content="Contacto | Descanso Inteligente">
+    <meta property="og:description" content="Envíanos tus dudas o sugerencias sobre ergonomía y teletrabajo.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://descansointeligente.es/contacto/">
+    <meta property="og:image" content="https://descansointeligente.es/assets/img/og-descanso-inteligente.jpg">
+
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .contact-wrapper {
+            max-width: 600px;
+            margin: 1rem auto 2rem;
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .contact-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-header h1 {
+            margin-bottom: 0.5rem;
+            font-size: 1.6rem;
+            color: var(--text);
+        }
+
+        .contact-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .contact-wrapper {
+                padding: 1.5rem;
+                margin: 1.5rem 0;
+            }
+
+            .contact-header h1 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="logo" href="../">Descanso Inteligente</a>
+            <button class="menu-toggle" aria-label="Menú">
+                <span></span><span></span><span></span>
+            </button>
+            <nav aria-label="Principal">
+                <ul class="main-nav">
+                    <li><a href="../">Inicio</a></li>
+                    <li><a href="../mejor-cojin-coxis-teletrabajo/">Mejor cojín coxis</a></li>
+                    <li><a href="../cojin-ortopedico-silla-oficina/">Cojín ortopédico</a></li>
+                    <li><a href="../cojin-coxis-sofa/">Cojín para sofá</a></li>
+                    <li><a href="../como-elegir-cojin-coxis/">Cómo elegir</a></li>
+                    <li><a href="../diferencias-cojin-u-vs-anillo/">U vs anillo</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="contact-wrapper reveal-on-scroll">
+            <div class="contact-header">
+                <h1>Contacta con nosotros</h1>
+                <p>¿Tienes dudas sobre qué cojín elegir o quieres sugerirnos un producto para analizar?<br>
+                    Rellena el formulario y te responderemos lo antes posible.</p>
+            </div>
+
+            <form action="https://formspree.io/f/mqedlzlg" method="POST">
+                <div class="form-group">
+                    <label for="name" class="form-label">Nombre</label>
+                    <input type="text" id="name" name="name" class="form-input" required placeholder="Tu nombre">
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" required placeholder="tu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="message" class="form-label">Mensaje</label>
+                    <textarea id="message" name="message" class="form-textarea" required
+                        placeholder="¿En qué podemos ayudarte?"></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Enviar mensaje</button>
+            </form>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a class="logo" href="../">Descanso Inteligente</a>
+                    <p>Guías independientes de ergonomía y descanso para teletrabajo. Comparativas actualizadas con
+                        criterio.</p>
+                </div>
+                <div>
+                    <p class="footer-heading">Guías</p>
+                    <ul class="footer-links">
+                        <li><a href="../mejor-cojin-coxis-teletrabajo/">Mejor cojín coxis</a></li>
+                        <li><a href="../cojin-ortopedico-silla-oficina/">Cojín ortopédico</a></li>
+                        <li><a href="../cojin-coxis-sofa/">Cojín para sofá</a></li>
+                        <li><a href="../como-elegir-cojin-coxis/">Cómo elegir</a></li>
+                        <li><a href="../diferencias-cojin-u-vs-anillo/">U vs anillo</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="footer-heading">Legal</p>
+                    <ul class="footer-links">
+                        <li><a href="../sobre-nosotros/">Sobre nosotros</a></li>
+                        <li><a href="../contacto/">Contacto</a></li>
+                        <li><a href="../aviso-legal/">Aviso legal</a></li>
+                        <li><a href="../politica-privacidad/">Privacidad</a></li>
+                        <li><a href="../politica-cookies/">Cookies</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Descanso Inteligente. Todos los derechos reservados.</p>
+                <p>Participamos en el Programa de Afiliados de Amazon EU.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/script.js"></script>
+</body>
+
+</html>
