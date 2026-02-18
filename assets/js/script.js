@@ -1,19 +1,57 @@
 (() => {
   const onReady = () => {
-    /* --- Hamburger menu --- */
+    /* --- Mobile Detection --- */
+    const isMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      return /android|ipad|iphone|ipod/i.test(userAgent) && !window.MSStream;
+    };
+
+    if (isMobile()) {
+      document.body.classList.add('is-mobile');
+    }
+
+    /* --- Hamburger menu & Drawer --- */
     const toggle = document.querySelector('.menu-toggle');
-    const nav = document.querySelector('.main-nav');
-    if (toggle && nav) {
+    const navContainer = document.querySelector('.main-nav-container');
+    const backdrop = document.querySelector('.menu-backdrop');
+    const closeBtn = document.querySelector('.close-menu');
+    const body = document.body;
+
+    const openMenu = () => {
+      toggle.setAttribute('aria-expanded', 'true');
+      toggle.classList.add('active');
+      navContainer.classList.add('is-open');
+      backdrop.classList.add('active');
+      body.style.overflow = 'hidden'; // Prevent scrolling
+    };
+
+    const closeMenu = () => {
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.classList.remove('active');
+      navContainer.classList.remove('is-open');
+      backdrop.classList.remove('active');
+      body.style.overflow = '';
+    };
+
+    if (toggle && navContainer) {
       toggle.addEventListener('click', () => {
-        toggle.classList.toggle('active');
-        nav.classList.toggle('is-open');
+        const isOpen = navContainer.classList.contains('is-open');
+        isOpen ? closeMenu() : openMenu();
       });
+
+      if (backdrop) backdrop.addEventListener('click', closeMenu);
+      if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+
       /* Close when clicking a link */
-      nav.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-          toggle.classList.remove('active');
-          nav.classList.remove('is-open');
-        });
+      navContainer.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', closeMenu);
+      });
+
+      /* Close on Escape key */
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navContainer.classList.contains('is-open')) {
+          closeMenu();
+        }
       });
     }
 

@@ -47,19 +47,32 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="logo" href="./">Descanso Inteligente</a>
-      <button class="menu-toggle" aria-label="Menú">
-        <span></span><span></span><span></span>
+      
+      <!-- Mobile Toggle -->
+      <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
       </button>
-      <nav aria-label="Principal">
+
+      <!-- Navigation -->
+      <nav class="main-nav-container" aria-label="Principal">
+        <div class="mobile-menu-header">
+          <span class="logo-text">Menú</span>
+          <button class="close-menu" aria-label="Cerrar menú">×</button>
+        </div>
         <ul class="main-nav">
-          <li><a href="./">Inicio</a></li>
-          <li><a href="mejor-cojin-coxis-teletrabajo/">Mejor cojín coxis</a></li>
-          <li><a href="cojin-ortopedico-silla-oficina/">Cojín ortopédico</a></li>
-          <li><a href="cojin-coxis-sofa/">Cojín para sofá</a></li>
-          <li><a href="como-elegir-cojin-coxis/">Cómo elegir</a></li>
-          <li><a href="diferencias-cojin-u-vs-anillo/">U vs anillo</a></li>
+          <li><a href="./" class="nav-link">Inicio</a></li>
+          <li><a href="mejor-cojin-coxis-teletrabajo/" class="nav-link">Mejor cojín coxis</a></li>
+          <li><a href="cojin-ortopedico-silla-oficina/" class="nav-link">Cojín ortopédico</a></li>
+          <li><a href="cojin-coxis-sofa/" class="nav-link">Cojín para sofá</a></li>
+          <li><a href="como-elegir-cojin-coxis/" class="nav-link">Cómo elegir</a></li>
+          <li><a href="diferencias-cojin-u-vs-anillo/" class="nav-link">U vs anillo</a></li>
         </ul>
       </nav>
+      
+      <!-- Backdrop for mobile -->
+      <div class="menu-backdrop"></div>
     </div>
   </header>
 
