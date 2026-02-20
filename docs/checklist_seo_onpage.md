@@ -35,7 +35,8 @@ Usa esta lista de verificación para asegurar que cada nueva página o artículo
     *   Están etiquetados correctamente en Amazon Associates (IDs de seguimiento correctos).
 - [ ] **Botones**: Funcionan y llevan al producto correcto.
 
-## 6. Técnico
-- [ ] **Datos Estructurados**: Validar Schema (Article, Product, FAQPage) con Rich Results Test.
+## 6. Técnico y Monetización
+- [ ] **Datos Estructurados**: Validar Schema (`Article`, `Product`, `FAQPage`, `BlogPosting`) con Rich Results Test.
 - [ ] **Mobile Friendly**: Verificar visualización en móvil (Chrome DevTools).
-- [ ] **Velocidad**: Verificar que no carga scripts innecesarios.
+- [ ] **Scripts**: Verificar que los scripts de GA4 y Google AdSense están presentes en el `<head>`.
+- [ ] **Ads.txt**: Confirmar que el archivo `ads.txt` es accesible en la raíz.
