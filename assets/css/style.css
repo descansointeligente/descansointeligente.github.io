@@ -7,25 +7,25 @@
 
 /* ---------- Design Tokens ---------- */
 :root {
-  --bg: #f0f4f8;
+  --bg: #f4f7f6;
   --surface: #ffffff;
   --surface-alt: #f8fafc;
-  --text: #1a202c;
-  --text-secondary: #4a5568;
-  --muted: #718096;
-  --primary: #0d9488;
-  --primary-light: #14b8a6;
-  --primary-dark: #0f766e;
-  --primary-bg: #f0fdfa;
+  --text: #0f172a;
+  --text-secondary: #334155;
+  --muted: #64748b;
+  --primary: #059669;
+  --primary-light: #10b981;
+  --primary-dark: #047857;
+  --primary-bg: #ecfdf5;
   --accent: #f59e0b;
   --accent-dark: #d97706;
   --amazon-orange: #ff9900;
   --amazon-orange-dark: #e88b00;
-  --amazon-bg: linear-gradient(135deg, #ff9900 0%, #e88b00 100%);
+  --amazon-bg: linear-gradient(135deg, #ff9900 0%, #ff8800 100%);
   --danger: #ef4444;
   --success: #10b981;
   --border: #e2e8f0;
-  --border-light: #edf2f7;
+  --border-light: #f1f5f9;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -123,15 +123,11 @@ h4 {
   z-index: 1002;
 }
 
-.logo::before {
-  content: '';
-  display: inline-block;
+.logo img {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  border-radius: 10px;
+  object-fit: contain;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px rgba(13, 148, 136, 0.2);
 }
 
 .logo:hover {
@@ -641,8 +637,8 @@ h4 {
 }
 
 .article-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-xl);
 }
 
 .article-card img {
@@ -712,8 +708,8 @@ h4 {
 }
 
 .product-rank-card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-4px);
 }
 
 .product-rank-card.top-1 {
@@ -1100,30 +1096,34 @@ h4 {
 
 /* ---------- Table & Product CTA Buttons ---------- */
 .table-cta,
-.btn-link {
+.btn-link,
+.cta-small {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   background: var(--amazon-bg);
   color: #1a1a1a;
   border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.5rem 1rem;
   transition: all var(--transition);
   white-space: nowrap;
   text-decoration: none;
+  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.25);
 }
 
 .table-cta:hover,
 .table-cta:focus,
 .btn-link:hover,
-.btn-link:focus {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
+.btn-link:focus,
+.cta-small:hover,
+.cta-small:focus {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(255, 153, 0, 0.4);
   text-decoration: none;
-  color: #1a1a1a;
+  color: #000;
 }
 
 /* ---------- Product Cards (Generic) ---------- */
@@ -1201,21 +1201,54 @@ h4 {
   gap: 0.5rem;
   background: var(--amazon-bg);
   color: #1a1a1a;
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 1.3rem;
-  font-weight: 700;
-  font-size: 0.95rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.6rem;
+  font-weight: 800;
+  font-size: 1.05rem;
   box-shadow: 0 4px 14px rgba(255, 153, 0, 0.3);
   transition: all var(--transition);
   text-decoration: none;
+  animation: none;
+  /* Can be overridden intentionally */
 }
 
 .cta-button:hover,
 .cta-button:focus {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 153, 0, 0.4);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(255, 153, 0, 0.5);
   text-decoration: none;
-  color: #1a1a1a;
+  color: #000;
+}
+
+/* Eye-catching premium heartbeat animation for main product CTAs */
+@keyframes attentionPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 153, 0, 0.7);
+  }
+
+  70% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 10px rgba(255, 153, 0, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 153, 0, 0);
+  }
+}
+
+.product-card .cta-button,
+.product-rank-cta,
+.offer-cta {
+  animation: attentionPulse 2.5s infinite;
+}
+
+.product-card .cta-button:hover,
+.product-rank-cta:hover,
+.offer-cta:hover {
+  animation: none;
+  transform: translateY(-3px) scale(1.03);
 }
 
 .product-card .cta-button {
@@ -1630,6 +1663,7 @@ h4 {
     margin: 0.8rem 0;
   }
 }
+
 /* ---------- Comparison Table ---------- */
 .comparison-section {
   padding: 4rem 0;
@@ -1711,12 +1745,13 @@ h4 {
 }
 
 @media (max-width: 768px) {
+
   .comparison-table th:first-child,
   .comparison-table td:first-child {
     position: sticky;
     left: 0;
     background: var(--surface);
     z-index: 10;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
   }
 }
