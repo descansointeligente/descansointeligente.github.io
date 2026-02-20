@@ -2,8 +2,8 @@
 
 ## Purpose
 **Descanso Inteligente** is a niche content website focused on ergonomics and rest (specifically coccyx cushions and orthopedic seats). 
-- **Goal**: Generate affiliate income via **Amazon Associates**.
-- **Strategy**: Creating high-quality, SEO-optimized content to rank for specific keywords (e.g., "cojín coxis teletrabajo", "mejor cojín ortopédico").
+- **Goal**: Generate affiliate income via **Amazon Associates** and display advertising via **Google AdSense**.
+- **Strategy**: Creating high-quality, SEO-optimized content to rank for specific keywords (e.g., "cojín coxis teletrabajo", "mejor cojín ortopédico") and driving topic authority through a comprehensive **Blog** section.
 
 ## Technical Architecture
 The project is built as a **Static Site** (HTML/CSS/JS) hosted on **GitHub Pages**.
@@ -14,13 +14,15 @@ The project is built as a **Static Site** (HTML/CSS/JS) hosted on **GitHub Pages
 - **Cost**: Free hosting on GitHub Pages.
 
 ### Key Components
-- **HTML**: Semantic structure optimized for SEO (proper headings, meta tags, schema.org data).
-- **CSS**: Custom design system (variables, responsive layout) without heavy frameworks (like Bootstrap) to keep the bundle size small.
-- **JS**: Minimal vanilla JavaScript for interactions (mobile menu, scroll effects) to avoid blocking the main thread.
+- **HTML**: Semantic structure optimized for SEO. Uses advanced Schema.org markup (`Product`, `BreadcrumbList`, `BlogPosting`) for rich snippets.
+- **CSS**: Custom design system (variables, responsive grid layouts) without heavy frameworks to keep the bundle size small.
+- **JS**: Minimal vanilla JavaScript for interactions (mobile menu).
+- **Analytics & Ads**: Global integration of Google Analytics 4 (GA4) and Google AdSense auto-ads readiness.
 
-## Affiliate & Legal
-- The site includes the required **Amazon Affiliate Disclaimer** on all pages.
-- It complies with GDPR/RGPD with specific pages for Privacy Policy, Cookies, and Legal Notice.
+## Monetization & Legal
+- **Amazon Associates**: The site includes the required Affiliate Disclaimer on all pages and uses highly-optimized contextual product cards.
+- **Google AdSense**: `ads.txt` is served from the root, and the site is configured for auto-ads.
+- **Compliance**: Complies with GDPR/RGPD with specific pages for Privacy Policy, Cookies Policy (including third-party ad network clauses), and Legal Notice.
 
 ## Development Guidelines
 - **Mobile First**: Google indexes the mobile version of the site first. Ensure all features work perfectly on mobile.
