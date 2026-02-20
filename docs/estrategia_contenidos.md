@@ -7,22 +7,30 @@
 
 ## 2. Tipos de Contenido (El Funnel)
 
-### TOFU (Top of Funnel) - Atracción
-*   **Guías Informativas**: "¿Por qué me duele el coxis al sentarme?", "Diferencias entre silla gaming y ergonómica".
-*   **Objetivo**: Captar tráfico informativo y educar.
-*   **CTAs**: Suaves, hacia guías de compra.
+### TOFU (Top of Funnel) - Atracción (Principalmente en el BLOG)
+*   **Artículos Educativos**: "¿Por qué me duele el coxis al sentarme?", "Síndrome del túnel carpiano: prevención".
+*   **Guías de Estilo de Vida**: "Cómo crear un setup minimalista", "La regla 20-20-20".
+*   **Objetivo**: Captar tráfico informativo masivo y educar sobre higiene postural. Enlazar siempre a guías de compra.
+*   **CTAs**: Suaves, botones hacia comparativas o reseñas BOFU.
 
 ### MOFU (Middle of Funnel) - Consideración
 *   **Comparativas 1 vs 1**: "Cojín de Gel vs Espuma: ¿Cuál es mejor?".
+*   **Blog de Comparativa**: "¿Silla gaming o ergonómica?".
 *   **Top X / Mejores X**: "Los 5 mejores cojines para hemorroides".
-*   **Objetivo**: Ayudar a decidir entre opciones.
+*   **Objetivo**: Ayudar a decidir entre opciones y tipos de producto.
 *   **Estructura**: Tabla comparativa al inicio es OBLIGATORIA.
 
 ### BOFU (Bottom of Funnel) - Decisión
 *   **Reseñas de Producto Único**: Análisis profundo de un modelo súper ventas.
-*   **Ofertas / Descuentos**: Páginas de Black Friday o Prime Day.
-*   **Objetivo**: Clic en el botón de Amazon.
-*   **CTAs**: Agresivos y repetidos (Inicio, medio, final y sticky).
+*   **Páginas de Categoría**: "Mejor Cojín Coxis Teletrabajo".
+*   **Objetivo**: Clic final en el botón de Amazon.
+*   **CTAs**: Agresivos (botones naranjas con animación de pulsación).
+
+## 3. Autoridad Temática (Topic Authority)
+El **Blog** es nuestra herramienta para demostrar a Google que somos expertos. Cada post debe:
+- Enlazar internamente a las "Money Pages" (páginas de producto).
+- Mantener el "Freshness" del dominio publicando nuevos consejos regularmente.
+- Atraer enlaces externos naturales mediante contenido útil.
 
 ## 3. Estructura de un Artículo Perfecto (SEO + CRO)
 1.  **H1 con Palabra Clave**: Ej: "Mejor Cojín Coxis 2026: Comparativa y Opiniones".
