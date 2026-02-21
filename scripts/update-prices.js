@@ -228,17 +228,20 @@ async function main() {
             return fullMatch;
         });
 
-        // Update original price container: hide if no discount, show <del>X</del> if there is
+        // Update original price container: show discount badge + <del>X</del> when discounted, empty otherwise
         newContent = newContent.replace(regexOriginal, (fullMatch, openTag, asin, oldText, closeTag) => {
             const data = productDataMap[asin];
             if (data && data.originalPrice) {
-                const newContent = `<del>${data.originalPrice}</del>`;
-                if (oldText.trim() !== newContent) {
+                const discountPart = data.discount
+                    ? `<span class="discount-badge discount-update" data-asin-discount="${asin}">${data.discount}</span>`
+                    : '';
+                const newInner = `${discountPart}<del>${data.originalPrice}</del>`;
+                if (oldText.trim() !== newInner) {
                     fileChanged = true;
-                    return openTag + newContent + closeTag;
+                    return openTag + newInner + closeTag;
                 }
             } else {
-                // No original price: hide the block
+                // No original price: empty the block
                 if (oldText.trim() !== '') {
                     fileChanged = true;
                     return openTag + '' + closeTag;
