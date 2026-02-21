@@ -904,7 +904,8 @@ h4 {
   font-weight: 700;
 }
 
-.product-rank-cta {
+.product-rank-cta,
+.btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -922,14 +923,16 @@ h4 {
   text-decoration: none;
 }
 
-.product-rank-cta:hover {
+.product-rank-cta:hover,
+.btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(255, 153, 0, 0.4);
   text-decoration: none;
   color: #1a1a1a;
 }
 
-.product-rank-cta-secondary {
+.product-rank-cta-secondary,
+.btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -947,7 +950,8 @@ h4 {
   text-decoration: none;
 }
 
-.product-rank-cta-secondary:hover {
+.product-rank-cta-secondary:hover,
+.btn-secondary:hover {
   background: var(--surface-alt);
   color: var(--primary);
   border-color: var(--primary);
