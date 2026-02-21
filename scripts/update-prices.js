@@ -23,8 +23,42 @@ const colors = {
  */
 async function fetchProductData(asin) {
     if (!RAPIDAPI_KEY) {
-        console.log(`${colors.yellow}[SIMULATION] No API Key provided. Skipping fetch for ${asin}.${colors.reset}`);
-        return null;
+        console.log(`${colors.yellow}[SIMULATION] No API Key provided. Returning mock data for ${asin}.${colors.reset}`);
+
+        // Mock data logic to show the user how discounts look
+        let price = '29,99 €';
+        let originalPrice = null;
+        let discount = null;
+        let stars = '4,3';
+        let priceNum = 29.99;
+        let isAmazonChoice = false;
+
+        if (asin === 'B0F1VD176V') {
+            price = '33,99 €';
+            originalPrice = '45,89 €';
+            discount = '-26%';
+            stars = '4,5';
+            priceNum = 33.99;
+        } else if (asin === 'B077G7D73D') {
+            price = '30,99 €';
+            originalPrice = '37,99 €';
+            discount = '-18%';
+            stars = '4,2';
+            priceNum = 30.99;
+            isAmazonChoice = true;
+        } else if (asin === 'B01N5LH26Y') {
+            price = '27,90 €';
+            priceNum = 27.90;
+        }
+
+        return {
+            price: price,
+            originalPrice: originalPrice,
+            stars: stars,
+            discount: discount,
+            priceNum: priceNum,
+            isAmazonChoice: isAmazonChoice
+        };
     }
 
     return new Promise((resolve, reject) => {
@@ -74,11 +108,15 @@ async function fetchProductData(asin) {
                             discount = `-${perc}%`;
                         }
 
+                        let isAmazonChoice = data.data.is_amazon_choice || false;
+
                         resolve({
                             price: price,
                             originalPrice: originalPrice,
                             stars: starRating,
-                            discount: discount
+                            discount: discount,
+                            priceNum: numPrice,
+                            isAmazonChoice: isAmazonChoice
                         });
                     } else {
                         console.error(`${colors.red}[ERROR] No price found for ${asin}${colors.reset}`);
@@ -231,11 +269,67 @@ async function main() {
             return fullMatch;
         });
 
-        // Update date
+        // Update Date
         newContent = newContent.replace(regexDate, (fullMatch, openTag, oldText, closeTag) => {
             if (oldText.trim() !== formattedDate) {
                 fileChanged = true;
                 return openTag + formattedDate + closeTag;
+            }
+            return fullMatch;
+        });
+
+        // Update Badges Dynamically
+        const badgeRegex = /data-asin-badge=["']([^"']+)["']/g;
+        const fileAsins = [];
+        let bMatch;
+        while ((bMatch = badgeRegex.exec(newContent)) !== null) {
+            fileAsins.push(bMatch[1]);
+        }
+
+        let minPriceValue = Infinity;
+        let minPriceAsin = null;
+        for (const asin of fileAsins) {
+            if (productDataMap[asin] && productDataMap[asin].priceNum) {
+                if (productDataMap[asin].priceNum < minPriceValue) {
+                    minPriceValue = productDataMap[asin].priceNum;
+                    minPriceAsin = asin;
+                }
+            }
+        }
+
+        const regexBadgeReplace = /(<div class="product-rank-badge"\s+data-asin-badge=["']([^"']+)["'][^>]*>)(.*?)(<\/div>)/g;
+        newContent = newContent.replace(regexBadgeReplace, (fullMatch, openTag, asin, oldText, closeTag) => {
+            const index = fileAsins.indexOf(asin);
+            // El #1 mantiene su texto SEO principal humano
+            if (index === 0) return fullMatch;
+
+            const data = productDataMap[asin];
+            if (data) {
+                let lang = "es";
+                if (file.includes('/en/')) lang = "en";
+                if (file.includes('/fr/')) lang = "fr";
+                if (file.includes('/it/')) lang = "it";
+
+                const labels = {
+                    "es": { choice: "🌟 Opción Amazon", cheap: "💰 Mejor precio", fallback: "⭐ Destacado" },
+                    "en": { choice: "🌟 Amazon's Choice", cheap: "💰 Best Price", fallback: "⭐ Highly Rated" },
+                    "fr": { choice: "🌟 Choix d'Amazon", cheap: "💰 Meilleur prix", fallback: "⭐ Très apprécié" },
+                    "it": { choice: "🌟 Scelta Amazon", cheap: "💰 Miglior prezzo", fallback: "⭐ Molto apprezzato" }
+                };
+
+                let targetText = oldText.trim();
+                if (data.isAmazonChoice) {
+                    targetText = labels[lang].choice;
+                } else if (asin === minPriceAsin) {
+                    targetText = labels[lang].cheap;
+                } else if (oldText.includes("Amazon") || oldText.includes("Mejor precio") || oldText.includes("Best Price") || oldText.includes("Meilleur") || oldText.includes("Miglior")) {
+                    targetText = labels[lang].fallback;
+                }
+
+                if (oldText.trim() !== targetText) {
+                    fileChanged = true;
+                    return openTag + targetText + closeTag;
+                }
             }
             return fullMatch;
         });

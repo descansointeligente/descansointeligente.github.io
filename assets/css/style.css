@@ -827,6 +827,17 @@ h4 {
   margin-bottom: 1rem;
 }
 
+.hero .last-updated-bar {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  display: inline-flex;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  margin-bottom: 1.2rem;
+}
+
 .product-rank-title {
   font-size: 1.2rem;
   font-weight: 700;
