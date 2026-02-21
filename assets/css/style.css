@@ -1755,3 +1755,88 @@ h4 {
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
   }
 }
+
+/* ---------- Social Share ---------- */
+.social-share-container {
+  margin: 3rem 0;
+  padding: 1.5rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.share-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+}
+
+.share-btn {
+  display: inline-flex;
+  gap: 0.5rem;
+  /* SVG GAP */
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.share-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.share-btn-x {
+  background: #000000;
+}
+
+.share-btn-fb {
+  background: #1877F2;
+}
+
+.share-btn-wa {
+  background: #25D366;
+}
+
+.share-btn-in {
+  background: #0A66C2;
+}
+
+.share-btn-copy {
+  background: var(--muted);
+}
+
+/* Mobile optimizations for Share Buttons */
+@media (max-width: 640px) {
+  .share-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .share-btn {
+    padding: 0.7rem 0.5rem;
+    font-size: 0.85rem;
+    width: 100%;
+  }
+
+  /* Make copy button span full width on small screens */
+  .share-btn-copy {
+    grid-column: 1 / -1;
+  }
+}
