@@ -205,8 +205,9 @@ async function main() {
     const formattedDate = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
 
     // Regex matchers for specific attributes
-    const regexPrice = /(<[^>]+data-asin=["']([^"']+)["'][^>]*>)([^<]*)(<\/[^>]+>)/g;
-    const regexOriginal = /(<[^>]+data-asin-original=["']([^"']+)["'][^>]*>)(.*?)(<\/[^>]+>)/g;
+    const regexPrice = /(<[^>]+data-asin=["']([^"']+)["'][^>]*>)([^<]*?)(<\/[^>]+>)/g;
+    // Match the full price-original wrapper div regardless of extra classes, capturing inner content
+    const regexOriginal = /(<div[^>]+data-asin-original=["']([^"']+)["'][^>]*>)([\s\S]*?)(<\/div>)/g;
     const regexDiscount = /(<[^>]+data-asin-discount=["']([^"']+)["'][^>]*>)([^<]*)(<\/[^>]+>)/g;
     const regexStar = /(<[^>]+data-asin-star=["']([^"']+)["'][^>]*>)([^<]*)(<\/[^>]+>)/g;
 
@@ -227,15 +228,20 @@ async function main() {
             return fullMatch;
         });
 
-        // Update original price (keep <del> wrapper logic simplified by letting inner HTML be updated)
+        // Update original price container: hide if no discount, show <del>X</del> if there is
         newContent = newContent.replace(regexOriginal, (fullMatch, openTag, asin, oldText, closeTag) => {
             const data = productDataMap[asin];
             if (data && data.originalPrice) {
-                // Format: <del>45,89 €</del>
-                const newReplacement = `<del>${data.originalPrice}</del>`;
-                if (oldText.trim() !== newReplacement) {
+                const newContent = `<del>${data.originalPrice}</del>`;
+                if (oldText.trim() !== newContent) {
                     fileChanged = true;
-                    return openTag + newReplacement + closeTag;
+                    return openTag + newContent + closeTag;
+                }
+            } else {
+                // No original price: hide the block
+                if (oldText.trim() !== '') {
+                    fileChanged = true;
+                    return openTag + '' + closeTag;
                 }
             }
             return fullMatch;
