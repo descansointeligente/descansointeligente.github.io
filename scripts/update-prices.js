@@ -17,11 +17,11 @@ const colors = {
 };
 
 /**
- * Fetch price from RapidAPI (Real-Time Amazon Data)
+ * Fetch data from RapidAPI (Real-Time Amazon Data)
  * @param {string} asin 
- * @returns {Promise<string|null>} Price string (e.g. "33,99 €") or null
+ * @returns {Promise<object|null>} Object with price, original_price, star_rating
  */
-async function fetchPrice(asin) {
+async function fetchProductData(asin) {
     if (!RAPIDAPI_KEY) {
         console.log(`${colors.yellow}[SIMULATION] No API Key provided. Skipping fetch for ${asin}.${colors.reset}`);
         return null;
@@ -51,7 +51,35 @@ async function fetchPrice(asin) {
                         // Format: "33.99" -> "33,99 €"
                         let price = data.data.product_price.replace('.', ',');
                         if (!price.includes('€')) price += ' €';
-                        resolve(price);
+
+                        let originalPrice = data.data.product_original_price;
+                        if (originalPrice) {
+                            originalPrice = originalPrice.replace('.', ',');
+                            if (!originalPrice.includes('€')) originalPrice += ' €';
+                        }
+
+                        let starRating = data.data.product_star_rating ? data.data.product_star_rating.replace('.', ',') : null;
+
+                        let discount = null;
+                        // Calculate percentage if both exist
+                        const numPrice = parseFloat(data.data.product_price.replace(/[^\d.]/g, ''));
+                        let numOriginal = null;
+                        if (data.data.product_original_price) {
+                            numOriginal = parseFloat(data.data.product_original_price.replace(/[^\d.]/g, ''));
+                        }
+
+                        if (numOriginal && numPrice && numOriginal > numPrice) {
+                            const diff = numOriginal - numPrice;
+                            const perc = Math.round((diff / numOriginal) * 100);
+                            discount = `-${perc}%`;
+                        }
+
+                        resolve({
+                            price: price,
+                            originalPrice: originalPrice,
+                            stars: starRating,
+                            discount: discount
+                        });
                     } else {
                         console.error(`${colors.red}[ERROR] No price found for ${asin}${colors.reset}`);
                         resolve(null);
@@ -100,30 +128,29 @@ async function main() {
     const asinsToFetch = new Set();
     const asinLocations = []; // Store where each ASIN is found {file, index, length, asin}
 
-    // 1. Scan files for ASINs
-    const regex = /(<[^>]+data-asin=["']([^"']+)["'][^>]*>)([^<]*)(<\/[^>]+>)/g;
+    // 1. Scan files for ASINs to fetch
+    const regexPriceInfo = /data-asin=["']([^"']+)["']/g;
 
     for (const file of htmlFiles) {
         let content = fs.readFileSync(file, 'utf8');
         let match;
-        while ((match = regex.exec(content)) !== null) {
-            const asin = match[2];
+        while ((match = regexPriceInfo.exec(content)) !== null) {
+            const asin = match[1];
             asinsToFetch.add(asin);
-            // We don't store exact locations because we replace by string later
         }
     }
 
     console.log(`${colors.green}Found ${asinsToFetch.size} unique products to check.${colors.reset}`);
 
-    // 2. Fetch Prices
-    const priceMap = {};
+    // 2. Fetch Data
+    const productDataMap = {};
     for (const asin of asinsToFetch) {
-        console.log(`Checking price for ${asin}...`);
+        console.log(`Checking data for ${asin}...`);
         try {
-            const newPrice = await fetchPrice(asin);
-            if (newPrice) {
-                priceMap[asin] = newPrice;
-                console.log(`${colors.green}  -> New price: ${newPrice}${colors.reset}`);
+            const newProductData = await fetchProductData(asin);
+            if (newProductData) {
+                productDataMap[asin] = newProductData;
+                console.log(`${colors.green}  -> Price: ${newProductData.price}, Original: ${newProductData.originalPrice}, Stars: ${newProductData.stars}, Discount: ${newProductData.discount}${colors.reset}`);
             }
             // Artificial delay to respect rate limits
             if (RAPIDAPI_KEY) await new Promise(r => setTimeout(r, 1000));
@@ -135,26 +162,86 @@ async function main() {
     // 3. Update Files
     let updatedFilesCount = 0;
 
-    if (Object.keys(priceMap).length === 0) {
-        console.log("No prices to update.");
-        return;
-    }
+    // Get today's date formatted
+    const today = new Date();
+    const formattedDate = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+
+    // Regex matchers for specific attributes
+    const regexPrice = /(<[^>]+data-asin=["']([^"']+)["'][^>]*>)([^<]*)(<\/[^>]+>)/g;
+    const regexOriginal = /(<[^>]+data-asin-original=["']([^"']+)["'][^>]*>)(.*?)(<\/[^>]+>)/g;
+    const regexDiscount = /(<[^>]+data-asin-discount=["']([^"']+)["'][^>]*>)([^<]*)(<\/[^>]+>)/g;
+    const regexStar = /(<[^>]+data-asin-star=["']([^"']+)["'][^>]*>)([^<]*)(<\/[^>]+>)/g;
+
+    // Regex for date update
+    const regexDate = /(<[^>]+id=["']last-updated-date["'][^>]*>)([^<]*)(<\/[^>]+>)/g;
 
     for (const file of htmlFiles) {
         let content = fs.readFileSync(file, 'utf8');
         let fileChanged = false;
 
-        const newContent = content.replace(regex, (fullMatch, openTag, asin, oldPrice, closeTag) => {
-            const newPrice = priceMap[asin];
-            if (newPrice && oldPrice.trim() !== newPrice) {
-                console.log(`${colors.blue}Updating ${path.basename(file)}: ${asin} (${oldPrice.trim()} -> ${newPrice})${colors.reset}`);
+        // Update main price
+        let newContent = content.replace(regexPrice, (fullMatch, openTag, asin, oldPrice, closeTag) => {
+            const data = productDataMap[asin];
+            if (data && data.price && oldPrice.trim() !== data.price) {
                 fileChanged = true;
-                return openTag + newPrice + closeTag;
+                return openTag + data.price + closeTag;
+            }
+            return fullMatch;
+        });
+
+        // Update original price (keep <del> wrapper logic simplified by letting inner HTML be updated)
+        newContent = newContent.replace(regexOriginal, (fullMatch, openTag, asin, oldText, closeTag) => {
+            const data = productDataMap[asin];
+            if (data && data.originalPrice) {
+                // Format: <del>45,89 €</del>
+                const newReplacement = `<del>${data.originalPrice}</del>`;
+                if (oldText.trim() !== newReplacement) {
+                    fileChanged = true;
+                    return openTag + newReplacement + closeTag;
+                }
+            }
+            return fullMatch;
+        });
+
+        // Update discount value
+        newContent = newContent.replace(regexDiscount, (fullMatch, openTag, asin, oldText, closeTag) => {
+            const data = productDataMap[asin];
+            if (data && data.discount && oldText.trim() !== data.discount) {
+                fileChanged = true;
+                return openTag + data.discount + closeTag;
+            } else if (!data || !data.discount) {
+                // If there's no discount, maybe hide or empty it? In this basic version we just empty it or leave it as is.
+                // It's safer to leave as is, or we could empty the text if we want to dynamically remove discounts.
+                // Let's replace with empty string if no discount but oldtext exists
+                if (oldText.trim() !== "") {
+                    fileChanged = true;
+                    return openTag + "" + closeTag;
+                }
+            }
+            return fullMatch;
+        });
+
+        // Update stars
+        newContent = newContent.replace(regexStar, (fullMatch, openTag, asin, oldText, closeTag) => {
+            const data = productDataMap[asin];
+            if (data && data.stars && oldText.trim() !== data.stars) {
+                fileChanged = true;
+                return openTag + data.stars + closeTag;
+            }
+            return fullMatch;
+        });
+
+        // Update date
+        newContent = newContent.replace(regexDate, (fullMatch, openTag, oldText, closeTag) => {
+            if (oldText.trim() !== formattedDate) {
+                fileChanged = true;
+                return openTag + formattedDate + closeTag;
             }
             return fullMatch;
         });
 
         if (fileChanged) {
+            console.log(`${colors.blue}Updating ${path.basename(file)}${colors.reset}`);
             fs.writeFileSync(file, newContent, 'utf8');
             updatedFilesCount++;
         }
