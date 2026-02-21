@@ -100,6 +100,46 @@
       });
     });
 
+    /* --- Social Sharing --- */
+    const shareContainer = document.querySelector('.social-share-container');
+    if (shareContainer) {
+      shareContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.share-btn');
+        if (!btn) return;
+        
+        const network = btn.getAttribute('data-network');
+        const url = encodeURIComponent(window.location.href);
+        const text = encodeURIComponent(document.title);
+        
+        let shareUrl = '';
+        switch (network) {
+          case 'x':
+            shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+            break;
+          case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+            break;
+          case 'whatsapp':
+            shareUrl = `https://api.whatsapp.com/send?text=${text}%20${url}`;
+            break;
+          case 'linkedin':
+            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+            break;
+          case 'copy':
+            navigator.clipboard.writeText(window.location.href).then(() => {
+              const originalText = btn.textContent;
+              btn.textContent = '¡Copiado!';
+              setTimeout(() => btn.textContent = originalText, 2000);
+            });
+            return;
+        }
+        
+        if (shareUrl) {
+          window.open(shareUrl, 'share-popup', 'width=600,height=500');
+        }
+      });
+    }
+
     /* --- Scroll reveal with stagger --- */
     const revealElements = document.querySelectorAll('.reveal-on-scroll');
     if (revealElements.length === 0) return;
@@ -124,7 +164,8 @@
     );
 
     revealElements.forEach(el => observer.observe(el));
-  };
+  
+      };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', onReady);
