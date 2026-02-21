@@ -694,7 +694,7 @@ h4 {
 
 .product-rank-card {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 200px 1fr 220px;
   gap: 1.5rem;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -705,6 +705,20 @@ h4 {
   transition: box-shadow var(--transition), transform var(--transition);
   position: relative;
   overflow: hidden;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .product-rank-card {
+    grid-template-columns: 200px 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .product-rank-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
 }
 
 .product-rank-card:hover {
@@ -753,34 +767,76 @@ h4 {
 }
 
 .product-rank-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
-  width: fit-content;
-  margin-bottom: 0.6rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-lg) 0 var(--radius-md) 0;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
 }
 
 .top-1 .product-rank-badge {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #1e293b;
 }
 
 .top-2 .product-rank-badge {
-  background: #f0f4f8;
-  color: #475569;
+  background: #cbd5e1;
+  color: #1e293b;
 }
 
 .top-3 .product-rank-badge,
 .top-4 .product-rank-badge,
 .top-5 .product-rank-badge {
-  background: #f8fafc;
-  color: #64748b;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Discount and Original Price Styles */
+.price-original {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-top: -0.2rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.discount-badge {
+  color: #dc2626;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+/* Date updated bar */
+.last-updated-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.hero .last-updated-bar {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  display: inline-flex;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  margin-bottom: 1.2rem;
 }
 
 .product-rank-title {
@@ -793,14 +849,17 @@ h4 {
 .product-rank-price {
   display: flex;
   align-items: baseline;
-  gap: 0.4rem;
-  margin-bottom: 0.6rem;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+  text-align: center;
 }
 
 .price-current {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 2.2rem;
+  font-weight: 900;
   color: var(--text);
+  letter-spacing: -0.5px;
 }
 
 .price-label {
@@ -811,6 +870,7 @@ h4 {
 .product-rank-stars {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   margin-bottom: 0.75rem;
   font-size: 0.88rem;
@@ -844,7 +904,8 @@ h4 {
   font-weight: 700;
 }
 
-.product-rank-cta {
+.product-rank-cta,
+.btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -853,26 +914,135 @@ h4 {
   color: #1a1a1a;
   font-weight: 700;
   font-size: 0.95rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1.2rem;
   border-radius: var(--radius-sm);
-  min-width: 220px;
+  width: 100%;
   text-align: center;
   box-shadow: 0 4px 14px rgba(255, 153, 0, 0.3);
   transition: all var(--transition);
   text-decoration: none;
 }
 
-.product-rank-cta:hover {
+.product-rank-cta:hover,
+.btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(255, 153, 0, 0.4);
   text-decoration: none;
   color: #1a1a1a;
 }
 
+.product-rank-cta-secondary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 0.90rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 99px;
+  width: 100%;
+  text-align: center;
+  transition: all var(--transition);
+  text-decoration: none;
+}
+
+.product-rank-cta-secondary:hover,
+.btn-secondary:hover {
+  background: var(--surface-alt);
+  color: var(--primary);
+  border-color: var(--primary);
+  text-decoration: none;
+}
+
+.product-rank-interaction {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: center;
+  border-left: 1px solid var(--border-light);
+  padding-left: 1.5rem;
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .product-rank-interaction {
+    grid-column: span 2;
+    border-left: none;
+    border-top: 1px solid var(--border-light);
+    padding-left: 0;
+    padding-top: 1.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .product-rank-interaction .product-rank-cta,
+  .product-rank-interaction .product-rank-cta-secondary {
+    width: auto;
+    flex: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .product-rank-interaction {
+    grid-column: span 1;
+    flex-direction: column;
+  }
+
+  .product-rank-interaction .product-rank-cta,
+  .product-rank-interaction .product-rank-cta-secondary {
+    width: 100%;
+  }
+}
+
+.product-rank-interaction .price-current {
+  font-size: 1.4rem;
+  margin-bottom: 0;
+}
+
+.product-rank-interaction .prime-badge {
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.product-rank-interaction .product-rank-price {
+  margin-bottom: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+@media (max-width: 900px) {
+  .product-rank-interaction .product-rank-price {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.amazon-logo-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.amazon-logo-container img {
+  height: 24px;
+  opacity: 0.9;
+}
+
 .product-rank-note {
   margin: 0.5rem 0 0;
   color: var(--muted);
   font-size: 0.78rem;
+  text-align: center;
 }
 
 /* ---------- Offers Grid (Pillar page) ---------- */
@@ -1839,4 +2009,36 @@ h4 {
   .share-btn-copy {
     grid-column: 1 / -1;
   }
+}
+
+/* =====================================================
+   Product rank card inside blog articles — vertical layout
+   ===================================================== */
+.article-layout .product-rank-card,
+.article-content .product-rank-card {
+  grid-template-columns: 1fr;
+  text-align: center;
+  max-width: 420px;
+  margin: 2rem auto;
+}
+
+.article-layout .product-rank-image,
+.article-content .product-rank-image {
+  width: 180px;
+  margin: 0 auto;
+}
+
+.article-layout .product-rank-price,
+.article-content .product-rank-price {
+  justify-content: center;
+}
+
+.article-layout .price-original,
+.article-content .price-original {
+  justify-content: center;
+}
+
+.article-layout .product-rank-stars,
+.article-content .product-rank-stars {
+  justify-content: center;
 }
