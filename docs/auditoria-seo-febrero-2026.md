@@ -167,5 +167,37 @@ El nicho de "cojín coxis teletrabajo" **SÍ tiene búsquedas**. No es que nadie
 
 ---
 
+## 8. TABLERO DE ISSUES (GitHub)
+
+### 🔵 Amazon PAAPI (esperando claves de API)
+| # | Issue | Estado |
+|---|-------|--------|
+| #21 | **[TECH] Migración a PAAPI oficial** | ⏳ Esperando claves |
+| #22 | **[FEAT] Vitaminado de Rankings con PAAPI** | ⏳ Depende de #21 |
+| #23 | **[CRO] Optimización de Conversión con Descuentos Dinámicos** | ⏳ Depende de #21 |
+| #24 | **[STRAT] Sección de Productos Relacionados Automatizada** | ⏳ Depende de #21 |
+
+### 🔴 SEO Urgente
+| # | Issue | Estado |
+|---|-------|--------|
+| #25 | **[SEO] Auditoría completa: Sitemap incompleto + Plan de Autoridad** | ✅ Documento creado |
+| #26 | **[SEO-P0] Verificar indexación en Google Search Console** | 🔜 Próxima acción |
+
+### 🟡 SEO Técnico
+| # | Issue | Estado |
+|---|-------|--------|
+| #27 | **[SEO-P1] Crear archivo llms.txt para visibilidad en IA** | Pendiente |
+| #28 | **[SEO-P1] Añadir FAQPage Schema a la página pilar** | Pendiente |
+| #29 | **[SEO-P1] Reforzar interlinking SILO entre posts y pilares** | Pendiente |
+| #30 | **[SEO-P1] Validar Core Web Vitals con Lighthouse** | Pendiente |
+
+### 🟢 Contenido y Autoridad
+| # | Issue | Estado |
+|---|-------|--------|
+| #31 | **[SEO-P2] Estrategia de backlinks y presencia externa** | Pendiente |
+| #32 | **[CONTENT-P1] Auditoría y optimización de las 10 entradas de blog existentes** | Pendiente |
+
+---
+
 *Documento generado: 23/02/2026*
 *Próxima revisión: 23/03/2026*
