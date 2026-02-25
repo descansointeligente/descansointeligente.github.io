@@ -187,6 +187,130 @@ async function fetchProductData(asin) {
 }
 
 /**
+ * Search products using Amazon Creators API (SearchItems)
+ * @param {string} keyword 
+ * @returns {Promise<Array>|null} Array of product objects
+ */
+async function searchRelatedProducts(keyword) {
+    if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY || !AMAZON_PARTNER_TAG) {
+        console.log(`${colors.yellow}[SIMULATION] No Amazon Keys provided. Returning mock search for '${keyword}'.${colors.reset}`);
+
+        // Mock data
+        return [
+            {
+                asin: 'B08F2H5V7S',
+                title: 'Reposapiés Ergonómico de Oficina con Espuma Viscoelástica',
+                url: 'https://amzn.to/mockURL',
+                image: 'https://m.media-amazon.com/images/I/71oD4o25H9L._AC_SL1500_.jpg',
+                price: '21,99 €'
+            },
+            {
+                asin: 'B07M6T1L8C',
+                title: 'Soporte Lumbar Ergonómico para Silla de Escritorio',
+                url: 'https://amzn.to/mockURL',
+                image: 'https://m.media-amazon.com/images/I/81Mmb0EhzPL._AC_SL1500_.jpg',
+                price: '28,99 €'
+            },
+            {
+                asin: 'B01M3PMD7S',
+                title: 'Soporte de Monitor Ajustable de Madera',
+                url: 'https://amzn.to/mockURL',
+                image: 'https://m.media-amazon.com/images/I/71rQ6QZ4z7L._AC_SL1500_.jpg',
+                price: '19,50 €'
+            }
+        ];
+    }
+
+    return new Promise((resolve, reject) => {
+        const payload = JSON.stringify({
+            Keywords: keyword,
+            Resources: [
+                "ItemInfo.Title",
+                "Images.Primary.Large",
+                "Offers.Listings.Price"
+            ],
+            ItemCount: 3,
+            PartnerTag: AMAZON_PARTNER_TAG,
+            PartnerType: "Associates",
+            Marketplace: "www.amazon.es"
+        });
+
+        const options = {
+            host: AMAZON_HOST,
+            path: '/paapi5/searchitems',
+            method: 'POST',
+            service: 'ProductAdvertisingAPI',
+            region: AMAZON_REGION,
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'X-Amz-Target': 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems',
+                'Content-Encoding': 'amz-1.0'
+            },
+            body: payload
+        };
+
+        aws4.sign(options, {
+            accessKeyId: AMAZON_ACCESS_KEY,
+            secretAccessKey: AMAZON_SECRET_KEY
+        });
+
+        const req = https.request(options, (res) => {
+            const chunks = [];
+            res.on('data', (chunk) => chunks.push(chunk));
+            res.on('end', () => {
+                try {
+                    const body = Buffer.concat(chunks).toString();
+                    const data = JSON.parse(body);
+
+                    if (data.Errors) {
+                        console.error(`${colors.red}[API ERROR] for search '${keyword}': ${JSON.stringify(data.Errors)}${colors.reset}`);
+                        return resolve(null);
+                    }
+
+                    if (data.SearchResult && data.SearchResult.Items && data.SearchResult.Items.length > 0) {
+                        const results = data.SearchResult.Items.map(item => {
+                            let priceStr = "Ver en Amazon";
+                            if (item.Offers && item.Offers.Listings && item.Offers.Listings.length > 0) {
+                                const priceInfo = item.Offers.Listings[0].Price;
+                                if (priceInfo && priceInfo.DisplayAmount) {
+                                    priceStr = priceInfo.DisplayAmount;
+                                    if (!priceStr.includes('€')) priceStr += ' €';
+                                    if (priceStr.includes('.')) priceStr = priceStr.replace('.', ',');
+                                }
+                            }
+
+                            let imageUrl = "";
+                            if (item.Images && item.Images.Primary && item.Images.Primary.Large) {
+                                imageUrl = item.Images.Primary.Large.URL;
+                            }
+
+                            return {
+                                asin: item.ASIN,
+                                title: item.ItemInfo && item.ItemInfo.Title ? item.ItemInfo.Title.DisplayValue : item.ASIN,
+                                url: item.DetailPageURL,
+                                image: imageUrl,
+                                price: priceStr
+                            };
+                        });
+                        resolve(results);
+                    } else {
+                        console.error(`${colors.yellow}[NO RESULTS] No items found for '${keyword}'${colors.reset}`);
+                        resolve(null);
+                    }
+                } catch (e) {
+                    console.error(`${colors.red}Search parse error: ${e.message}${colors.reset}`);
+                    resolve(null);
+                }
+            });
+        });
+
+        req.on('error', (e) => reject(e));
+        req.write(payload);
+        req.end();
+    });
+}
+
+/**
  * Find all HTML files recursively
  */
 function findHtmlFiles(dir, fileList = []) {
@@ -217,21 +341,25 @@ async function main() {
 
     const htmlFiles = findHtmlFiles(ROOT_DIR);
     const asinsToFetch = new Set();
+    const keywordsToSearch = new Set();
     const asinLocations = []; // Store where each ASIN is found {file, index, length, asin}
 
-    // 1. Scan files for ASINs to fetch
+    // 1. Scan files for ASINs and Keywords to fetch
     const regexPriceInfo = /data-asin=["']([^"']+)["']/g;
+    const regexSearchKeywords = /data-search-keywords=["']([^"']+)["']/g;
 
     for (const file of htmlFiles) {
         let content = fs.readFileSync(file, 'utf8');
         let match;
         while ((match = regexPriceInfo.exec(content)) !== null) {
-            const asin = match[1];
-            asinsToFetch.add(asin);
+            asinsToFetch.add(match[1]);
+        }
+        while ((match = regexSearchKeywords.exec(content)) !== null) {
+            keywordsToSearch.add(match[1]);
         }
     }
 
-    console.log(`${colors.green}Found ${asinsToFetch.size} unique products to check.${colors.reset}`);
+    console.log(`${colors.green}Found ${asinsToFetch.size} unique products and ${keywordsToSearch.size} keywords to check.${colors.reset}`);
 
     // 2. Fetch Data
     const productDataMap = {};
@@ -247,6 +375,24 @@ async function main() {
             if (AMAZON_ACCESS_KEY) await new Promise(r => setTimeout(r, 1000));
         } catch (e) {
             console.error(`${colors.red}Failed to fetch ${asin}: ${e.message}${colors.reset}`);
+        }
+    }
+
+    // 2.5 Search Related Products Data
+    const searchDataMap = {};
+    if (keywordsToSearch.size > 0) {
+        for (const keyword of keywordsToSearch) {
+            console.log(`Searching related products for '${keyword}'...`);
+            try {
+                const results = await searchRelatedProducts(keyword);
+                if (results && results.length > 0) {
+                    searchDataMap[keyword] = results;
+                    console.log(`${colors.green}  -> Found ${results.length} related products.${colors.reset}`);
+                }
+                if (AMAZON_ACCESS_KEY) await new Promise(r => setTimeout(r, 1000));
+            } catch (e) {
+                console.error(`${colors.red}Failed to search ${keyword}: ${e.message}${colors.reset}`);
+            }
         }
     }
 
@@ -440,6 +586,34 @@ async function main() {
                 if (oldText.trim() !== "") {
                     fileChanged = true;
                     return openTag + "" + closeTag;
+                }
+            }
+            return fullMatch;
+        });
+
+        // Update Related Products
+        const regexRelated = /(<div[^>]+data-search-keywords=["']([^"']+)["'][^>]*>)([\s\S]*?)(<\/div>\s*<!-- related-end -->)/g;
+        newContent = newContent.replace(regexRelated, (fullMatch, openTag, keyword, oldText, closeTag) => {
+            const trimmedKeyword = keyword.trim();
+            const data = searchDataMap[trimmedKeyword];
+            if (data && data.length > 0) {
+                let gridHtml = `\n<div class="related-products-grid">\n`;
+                for (const item of data) {
+                    gridHtml += `
+  <div class="related-card">
+    <div class="related-img"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>
+    <div class="related-info">
+      <h4 class="related-title">${item.title}</h4>
+      <div class="related-price">${item.price}</div>
+      <a href="${item.url}" target="_blank" rel="nofollow sponsored noopener" class="related-cta">Ver en Amazon</a>
+    </div>
+  </div>\n`;
+                }
+                gridHtml += `</div>\n`;
+
+                if (oldText !== gridHtml) {
+                    fileChanged = true;
+                    return openTag + gridHtml + closeTag;
                 }
             }
             return fullMatch;
