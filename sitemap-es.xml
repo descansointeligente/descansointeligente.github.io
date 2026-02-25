@@ -2,38 +2,105 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://descansointeligente.es/</loc>
-    <lastmod>2026-02-17</lastmod>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
   <url>
     <loc>https://descansointeligente.es/mejor-cojin-coxis-teletrabajo/</loc>
-    <lastmod>2026-02-17</lastmod>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://descansointeligente.es/cojin-ortopedico-silla-oficina/</loc>
-    <lastmod>2026-02-17</lastmod>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://descansointeligente.es/cojin-coxis-sofa/</loc>
-    <lastmod>2026-02-17</lastmod>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://descansointeligente.es/como-elegir-cojin-coxis/</loc>
-    <lastmod>2026-02-17</lastmod>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://descansointeligente.es/diferencias-cojin-u-vs-anillo/</loc>
-    <lastmod>2026-02-17</lastmod>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://descansointeligente.es/blog/</loc>
-    <lastmod>2026-02-21</lastmod>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
+  <!-- Blog posts -->
   <url>
     <loc>https://descansointeligente.es/blog/dolor-espalda-teletrabajo/</loc>
     <lastmod>2026-02-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://descansointeligente.es/blog/como-sentarse-correctamente/</loc>
     <lastmod>2026-02-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://descansointeligente.es/blog/cojin-gel-vs-viscoelastico/</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://descansointeligente.es/blog/lesiones-esfuerzo-repetitivo-rsi/</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://descansointeligente.es/blog/peligro-cruzar-piernas/</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://descansointeligente.es/blog/regla-20-20-20-vista-cuello/</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://descansointeligente.es/blog/setup-minimalista-ergonomico/</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://descansointeligente.es/blog/silla-gaming-vs-ergonomica/</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://descansointeligente.es/blog/sindrome-tunel-carpiano-ejercicios/</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://descansointeligente.es/blog/standing-desk-mitos-verdades/</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

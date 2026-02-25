@@ -1,0 +1,49 @@
+# Descanso Inteligente
+
+> Guía experta en español sobre ergonomía, cojines ortopédicos y bienestar para teletrabajadores.
+
+Descanso Inteligente es un sitio web especializado en ergonomía y descanso para personas que trabajan desde casa. Ofrecemos comparativas detalladas, guías de compra y artículos sobre salud postural basados en evidencia científica.
+
+## Temáticas principales
+
+- Cojines ortopédicos para el coxis (comparativas, rankings, guías de compra)
+- Ergonomía en teletrabajo (postura, mobiliario, hábitos saludables)
+- Dolor de espalda y prevención (ejercicios, consejos, productos)
+- Setup ergonómico para home office
+
+## Páginas principales
+
+- [Inicio](https://descansointeligente.es/)
+- [Mejor cojín coxis para teletrabajo — Ranking y guía de compra](https://descansointeligente.es/mejor-cojin-coxis-teletrabajo/)
+- [Cojín ortopédico para silla de oficina](https://descansointeligente.es/cojin-ortopedico-silla-oficina/)
+- [Cojín coxis para sofá](https://descansointeligente.es/cojin-coxis-sofa/)
+- [Cómo elegir un cojín coxis — Guía completa](https://descansointeligente.es/como-elegir-cojin-coxis/)
+- [Diferencias entre cojín en U y cojín anillo](https://descansointeligente.es/diferencias-cojin-u-vs-anillo/)
+
+## Blog — Artículos de salud y ergonomía
+
+- [Dolor de espalda en teletrabajo: causas y soluciones](https://descansointeligente.es/blog/dolor-espalda-teletrabajo/)
+- [Cómo sentarse correctamente: guía definitiva](https://descansointeligente.es/blog/como-sentarse-correctamente/)
+- [Cojín de gel vs viscoelástico: comparativa técnica](https://descansointeligente.es/blog/cojin-gel-vs-viscoelastico/)
+- [Lesiones por esfuerzo repetitivo (RSI): prevención](https://descansointeligente.es/blog/lesiones-esfuerzo-repetitivo-rsi/)
+- [El peligro de cruzar las piernas al sentarse](https://descansointeligente.es/blog/peligro-cruzar-piernas/)
+- [Regla 20-20-20: protege tu vista y cuello](https://descansointeligente.es/blog/regla-20-20-20-vista-cuello/)
+- [Setup minimalista ergonómico para teletrabajo](https://descansointeligente.es/blog/setup-minimalista-ergonomico/)
+- [Silla gaming vs silla ergonómica: la verdad](https://descansointeligente.es/blog/silla-gaming-vs-ergonomica/)
+- [Síndrome del túnel carpiano: ejercicios de prevención](https://descansointeligente.es/blog/sindrome-tunel-carpiano-ejercicios/)
+- [Standing desk: mitos y verdades](https://descansointeligente.es/blog/standing-desk-mitos-verdades/)
+
+## Idiomas disponibles
+
+- Español (ES): https://descansointeligente.es/
+- English (EN): https://descansointeligente.es/en/
+- Français (FR): https://descansointeligente.es/fr/
+- Italiano (IT): https://descansointeligente.es/it/
+
+## Información del sitio
+
+- Dominio: descansointeligente.es
+- Idioma principal: Español
+- País objetivo: España
+- Sector: Ergonomía, salud postural, teletrabajo
+- Monetización: Programa de Afiliados de Amazon
