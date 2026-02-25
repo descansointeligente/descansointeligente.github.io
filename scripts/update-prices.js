@@ -192,30 +192,28 @@ async function fetchProductData(asin) {
  * @returns {Promise<Array>|null} Array of product objects
  */
 async function searchRelatedProducts(keyword) {
-    if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY || !AMAZON_PARTNER_TAG) {
-        console.log(`${colors.yellow}[SIMULATION] No Amazon Keys provided. Returning mock search for '${keyword}'.${colors.reset}`);
-
-        // Mock data
+    if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY) {
+        console.log(`[SIMULATION] No Amazon Keys provided. Returning mock search for '${keyword}'.`);
         return [
             {
-                asin: 'B08F2H5V7S',
+                asin: 'mock1',
                 title: 'Reposapiés Ergonómico de Oficina con Espuma Viscoelástica',
                 url: 'https://amzn.to/mockURL',
-                image: 'https://m.media-amazon.com/images/I/71oD4o25H9L._AC_SL1500_.jpg',
+                image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp',
                 price: '21,99 €'
             },
             {
-                asin: 'B07M6T1L8C',
+                asin: 'mock2',
                 title: 'Soporte Lumbar Ergonómico para Silla de Escritorio',
                 url: 'https://amzn.to/mockURL',
-                image: 'https://m.media-amazon.com/images/I/81Mmb0EhzPL._AC_SL1500_.jpg',
+                image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp',
                 price: '28,99 €'
             },
             {
-                asin: 'B01M3PMD7S',
+                asin: 'mock3',
                 title: 'Soporte de Monitor Ajustable de Madera',
                 url: 'https://amzn.to/mockURL',
-                image: 'https://m.media-amazon.com/images/I/71rQ6QZ4z7L._AC_SL1500_.jpg',
+                image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp',
                 price: '19,50 €'
             }
         ];
