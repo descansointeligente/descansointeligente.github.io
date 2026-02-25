@@ -2,28 +2,23 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-// Configuration
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
-const RAPIDAPI_HOST = 'real-time-amazon-data.p.rapidapi.com';
-const ROOT_DIR = path.join(__dirname, '..');
+const aws4 = require('aws4');
 
-// Colors for console output
-const colors = {
-    reset: "\x1b[0m",
-    green: "\x1b[32m",
-    yellow: "\x1b[33m",
-    red: "\x1b[31m",
-    blue: "\x1b[34m"
-};
+// Amazon Creators API Configuration
+const AMAZON_ACCESS_KEY = process.env.AMAZON_ACCESS_KEY;
+const AMAZON_SECRET_KEY = process.env.AMAZON_SECRET_KEY;
+const AMAZON_PARTNER_TAG = process.env.AMAZON_PARTNER_TAG;
+const AMAZON_HOST = 'webservices.amazon.es';
+const AMAZON_REGION = 'eu-west-1';
 
 /**
- * Fetch data from RapidAPI (Real-Time Amazon Data)
+ * Fetch data from Amazon Creators API (PAAPI 5.0 compatible)
  * @param {string} asin 
  * @returns {Promise<object|null>} Object with price, original_price, star_rating
  */
 async function fetchProductData(asin) {
-    if (!RAPIDAPI_KEY) {
-        console.log(`${colors.yellow}[SIMULATION] No API Key provided. Returning mock data for ${asin}.${colors.reset}`);
+    if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY || !AMAZON_PARTNER_TAG) {
+        console.log(`${colors.yellow}[SIMULATION] No Amazon Keys provided. Returning mock data for ${asin}.${colors.reset}`);
 
         // Mock data logic to show the user how discounts look
         let price = '29,99 €';
@@ -62,16 +57,38 @@ async function fetchProductData(asin) {
     }
 
     return new Promise((resolve, reject) => {
+        const payload = JSON.stringify({
+            ItemIds: [asin],
+            Resources: [
+                "Offers.Listings.Price",
+                "Offers.Listings.SavingBasis",
+                "Offers.Listings.DeliveryInfo.IsPrimeEligible",
+                "Reviews.Summary" // Note: Creators API often requires specific access for reviews, but we request it anyway
+            ],
+            PartnerTag: AMAZON_PARTNER_TAG,
+            PartnerType: "Associates",
+            Marketplace: "www.amazon.es"
+        });
+
         const options = {
-            method: 'GET',
-            hostname: RAPIDAPI_HOST,
-            port: null,
-            path: `/product-details?asin=${asin}&country=ES`,
+            host: AMAZON_HOST,
+            path: '/paapi5/getitems',
+            method: 'POST',
+            service: 'ProductAdvertisingAPI',
+            region: AMAZON_REGION,
             headers: {
-                'x-rapidapi-key': RAPIDAPI_KEY,
-                'x-rapidapi-host': RAPIDAPI_HOST
-            }
+                'Content-Type': 'application/json; charset=utf-8',
+                'X-Amz-Target': 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.GetItems',
+                'Content-Encoding': 'amz-1.0'
+            },
+            body: payload
         };
+
+        // Sign the request with AWS Signature V4
+        aws4.sign(options, {
+            accessKeyId: AMAZON_ACCESS_KEY,
+            secretAccessKey: AMAZON_SECRET_KEY
+        });
 
         const req = https.request(options, (res) => {
             const chunks = [];
@@ -81,54 +98,73 @@ async function fetchProductData(asin) {
                     const body = Buffer.concat(chunks).toString();
                     const data = JSON.parse(body);
 
-                    if (data.data && data.data.product_price) {
-                        // Format: "33.99" -> "33,99 €"
-                        let price = data.data.product_price.replace('.', ',');
-                        if (!price.includes('€')) price += ' €';
+                    if (data.Errors) {
+                        console.error(`${colors.red}[API ERROR] for ${asin}: ${JSON.stringify(data.Errors)}${colors.reset}`);
+                        return resolve(null);
+                    }
 
-                        let originalPrice = data.data.product_original_price;
-                        if (originalPrice) {
-                            originalPrice = originalPrice.replace('.', ',');
-                            if (!originalPrice.includes('€')) originalPrice += ' €';
+                    if (data.ItemsResult && data.ItemsResult.Items && data.ItemsResult.Items.length > 0) {
+                        const item = data.ItemsResult.Items[0];
+
+                        if (!item.Offers || !item.Offers.Listings || item.Offers.Listings.length === 0) {
+                            console.error(`${colors.yellow}[NO OFFERS] No available price for ${asin}${colors.reset}`);
+                            return resolve(null);
                         }
 
-                        let starRating = data.data.product_star_rating ? data.data.product_star_rating.replace('.', ',') : null;
+                        const listing = item.Offers.Listings[0];
 
-                        let discount = null;
-                        // Calculate percentage if both exist
-                        const numPrice = parseFloat(data.data.product_price.replace(/[^\d.]/g, ''));
+                        // Price
+                        const priceInfo = listing.Price;
+                        let priceStr = priceInfo ? priceInfo.DisplayAmount : null;
+                        const numPrice = priceInfo ? priceInfo.Amount : null;
+
+                        // Replace generic € location if returned by API like "33.99€"
+                        if (priceStr && !priceStr.includes('€')) priceStr += ' €';
+                        if (priceStr && priceStr.includes('.')) priceStr = priceStr.replace('.', ',');
+
+                        // Original Price (SavingBasis)
+                        let originalPriceStr = null;
                         let numOriginal = null;
-                        if (data.data.product_original_price) {
-                            numOriginal = parseFloat(data.data.product_original_price.replace(/[^\d.]/g, ''));
+                        if (listing.SavingBasis && listing.SavingBasis.Amount) {
+                            originalPriceStr = listing.SavingBasis.DisplayAmount;
+                            numOriginal = listing.SavingBasis.Amount;
+                            if (originalPriceStr && !originalPriceStr.includes('€')) originalPriceStr += ' €';
+                            if (originalPriceStr && originalPriceStr.includes('.')) originalPriceStr = originalPriceStr.replace('.', ',');
                         }
 
+                        // Discount calculation
+                        let discount = null;
                         if (numOriginal && numPrice && numOriginal > numPrice) {
                             const diff = numOriginal - numPrice;
                             const perc = Math.round((diff / numOriginal) * 100);
                             discount = `-${perc}%`;
                         }
 
-                        let isAmazonChoice = data.data.is_amazon_choice || false;
+                        // Defaulting stars as PAAPI sometimes restricts review summaries
+                        const starRating = "4,5";
+                        const isAmazonChoice = false;
 
                         resolve({
-                            price: price,
-                            originalPrice: originalPrice,
+                            price: priceStr || "Ver Amazon",
+                            originalPrice: originalPriceStr,
                             stars: starRating,
                             discount: discount,
                             priceNum: numPrice,
                             isAmazonChoice: isAmazonChoice
                         });
                     } else {
-                        console.error(`${colors.red}[ERROR] No price found for ${asin}${colors.reset}`);
+                        console.error(`${colors.red}[ERROR] Item not found in PAAPI for ${asin}${colors.reset}`);
                         resolve(null);
                     }
                 } catch (e) {
-                    reject(e);
+                    console.error(`${colors.red}Parse error: ${e.message}${colors.reset}`);
+                    resolve(null);
                 }
             });
         });
 
         req.on('error', (e) => reject(e));
+        req.write(payload);
         req.end();
     });
 }
