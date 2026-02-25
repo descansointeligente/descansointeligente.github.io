@@ -2,6 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
+// Simple console colors
+const colors = {
+    reset: "\x1b[0m",
+    red: "\x1b[31m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    blue: "\x1b[34m"
+};
 const aws4 = require('aws4');
 
 // Amazon Creators API Configuration
@@ -10,6 +18,8 @@ const AMAZON_SECRET_KEY = process.env.AMAZON_SECRET_KEY;
 const AMAZON_PARTNER_TAG = process.env.AMAZON_PARTNER_TAG;
 const AMAZON_HOST = 'webservices.amazon.es';
 const AMAZON_REGION = 'eu-west-1';
+
+const ROOT_DIR = path.join(__dirname, '..');
 
 /**
  * Fetch data from Amazon Creators API (PAAPI 5.0 compatible)
@@ -140,6 +150,12 @@ async function fetchProductData(asin) {
                             discount = `-${perc}%`;
                         }
 
+                        // Prime Eligibility
+                        let isPrime = false;
+                        if (listing.DeliveryInfo && listing.DeliveryInfo.IsPrimeEligible === true) {
+                            isPrime = true;
+                        }
+
                         // Defaulting stars as PAAPI sometimes restricts review summaries
                         const starRating = "4,5";
                         const isAmazonChoice = false;
@@ -150,7 +166,8 @@ async function fetchProductData(asin) {
                             stars: starRating,
                             discount: discount,
                             priceNum: numPrice,
-                            isAmazonChoice: isAmazonChoice
+                            isAmazonChoice: isAmazonChoice,
+                            isPrime: isPrime
                         });
                     } else {
                         console.error(`${colors.red}[ERROR] Item not found in PAAPI for ${asin}${colors.reset}`);
@@ -194,8 +211,8 @@ function findHtmlFiles(dir, fileList = []) {
 async function main() {
     console.log(`${colors.blue}Starting price update...${colors.reset}`);
 
-    if (!RAPIDAPI_KEY) {
-        console.warn(`${colors.yellow}WARNING: RAPIDAPI_KEY not found. Running in simulation mode.${colors.reset}`);
+    if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY || !AMAZON_PARTNER_TAG) {
+        console.warn(`${colors.yellow}WARNING: Amazon PAAPI keys not found. Running in simulation mode.${colors.reset}`);
     }
 
     const htmlFiles = findHtmlFiles(ROOT_DIR);
@@ -227,7 +244,7 @@ async function main() {
                 console.log(`${colors.green}  -> Price: ${newProductData.price}, Original: ${newProductData.originalPrice}, Stars: ${newProductData.stars}, Discount: ${newProductData.discount}${colors.reset}`);
             }
             // Artificial delay to respect rate limits
-            if (RAPIDAPI_KEY) await new Promise(r => setTimeout(r, 1000));
+            if (AMAZON_ACCESS_KEY) await new Promise(r => setTimeout(r, 1000));
         } catch (e) {
             console.error(`${colors.red}Failed to fetch ${asin}: ${e.message}${colors.reset}`);
         }
@@ -268,13 +285,27 @@ async function main() {
         newContent = newContent.replace(regexOriginal, (fullMatch, openTag, asin, oldText, closeTag) => {
             const data = productDataMap[asin];
             if (data && data.originalPrice) {
+                // Determine if it's a flash sale (discount > 10%)
+                let isFlashSale = false;
+                if (data.discount) {
+                    const discountNum = parseInt(data.discount.replace(/[^\d]/g, ''), 10);
+                    if (!isNaN(discountNum) && discountNum > 10) {
+                        isFlashSale = true;
+                    }
+                }
+
+                const extraClass = isFlashSale ? ' flash-sale' : '';
                 const discountPart = data.discount
-                    ? `<span class="discount-badge discount-update" data-asin-discount="${asin}">${data.discount}</span>`
+                    ? `<span class="discount-badge discount-update${extraClass}" data-asin-discount="${asin}">${data.discount}</span>`
                     : '';
+
                 const newInner = `${discountPart}<del>${data.originalPrice}</del>`;
-                if (oldText.trim() !== newInner) {
+                // We don't check oldText strictly here because we are dynamically regenerating the inner HTML
+                // But we can check if the full tag matches
+                const newFull = openTag + newInner + closeTag;
+                if (fullMatch !== newFull) {
                     fileChanged = true;
-                    return openTag + newInner + closeTag;
+                    return newFull;
                 }
             } else {
                 // No original price: empty the block
@@ -286,19 +317,34 @@ async function main() {
             return fullMatch;
         });
 
-        // Update discount value
+        // Update discount value (only if it exists standalone, though usually it's inside regexOriginal now)
         newContent = newContent.replace(regexDiscount, (fullMatch, openTag, asin, oldText, closeTag) => {
             const data = productDataMap[asin];
-            if (data && data.discount && oldText.trim() !== data.discount) {
-                fileChanged = true;
-                return openTag + data.discount + closeTag;
+            if (data && data.discount) {
+                let isFlashSale = false;
+                const discountNum = parseInt(data.discount.replace(/[^\d]/g, ''), 10);
+                if (!isNaN(discountNum) && discountNum > 10) {
+                    isFlashSale = true;
+                }
+
+                // Add flash-sale class to the opening tag if it's missing, or keep it if it's there
+                let newOpenTag = openTag;
+                if (isFlashSale && !newOpenTag.includes('flash-sale')) {
+                    newOpenTag = newOpenTag.replace('class="', 'class="flash-sale ');
+                } else if (!isFlashSale && newOpenTag.includes('flash-sale')) {
+                    newOpenTag = newOpenTag.replace('flash-sale ', '').replace(' flash-sale', '');
+                }
+
+                if (oldText.trim() !== data.discount || openTag !== newOpenTag) {
+                    fileChanged = true;
+                    return newOpenTag + data.discount + closeTag;
+                }
             } else if (!data || !data.discount) {
-                // If there's no discount, maybe hide or empty it? In this basic version we just empty it or leave it as is.
-                // It's safer to leave as is, or we could empty the text if we want to dynamically remove discounts.
-                // Let's replace with empty string if no discount but oldtext exists
                 if (oldText.trim() !== "") {
                     fileChanged = true;
-                    return openTag + "" + closeTag;
+                    // Remove flash sale class if present when emptying
+                    let clearOpenTag = openTag.replace('flash-sale ', '').replace(' flash-sale', '');
+                    return clearOpenTag + "" + closeTag;
                 }
             }
             return fullMatch;
@@ -374,6 +420,26 @@ async function main() {
                 if (oldText.trim() !== targetText) {
                     fileChanged = true;
                     return openTag + targetText + closeTag;
+                }
+            }
+            return fullMatch;
+        });
+
+        // Update Prime Icon
+        const regexPrime = /(<div[^>]+data-asin-prime=["']([^"']+)["'][^>]*>)([\s\S]*?)(<\/div>)/g;
+        newContent = newContent.replace(regexPrime, (fullMatch, openTag, asin, oldText, closeTag) => {
+            const data = productDataMap[asin];
+            if (data && data.isPrime) {
+                // Prime SVG Icon (simplified official look)
+                const primeSvg = `<svg class="prime-icon" viewBox="0 0 100 30" width="60" height="18" xmlns="http://www.w3.org/2000/svg"><path fill="#00A8E1" d="M12.7 20.4l3.1-4c1-1.3 2.1-1.9 3.6-1.9 1 0 1.9.3 2.6 1L31 24.3l8.6-18.7c.3-.6.6-.9 1.1-.9h4.3c-.6 1.4-1.3 2.8-2 4.1L30.9 29.5c-.3.6-.8 1-1.4 1h-2c-.6 0-1-.3-1.4-.9l-7.2-7.5-3.3 4.2c-.4.5-.9.8-1.5.8h-4.3c.4-.6.9-1.2 1.3-1.7V25c0 1.4-.2 2.7-.6 4-3.7-.8-6.9-2.5-9.3-5L12 23.4l.7-3zM83.4 12c-4.6 0-8.6 3.1-9.7 7.5h-10c.8-5.7 5.7-9.8 11.6-9.8 4 0 7.5 2 9.4 5.2.3.5.3 1 0 1.5l-2.1 3.2c-.3.4-.8.5-1.2.3-1.4-.8-3-1.2-4.7-1.2-3.1 0-5.8 2-6.7 4.9h8.2c0-3.3 2.5-6.2 5.9-6.6.6-.1 1.1.2 1.3.8l1.3 3.6c.1.4 0 .9-.4 1.1L95.5 30h-4l-6.1-10.7c-.5.1-.9.2-1.4.2-4 0-7.8-2.6-9-6.5h-4.6v17h-4V10.1h4v4h7.9c1.4-3.5 5.1-6.2 9.3-6.2 4.3 0 8 2.2 9.9 5.6.3.5.2 1.1-.1 1.5l-2.2 3.2c-.3.4-.8.5-1.2.3-1.5-.9-3.2-1.3-4.9-1.3-3.2 0-6.1 2-7.1 5h8.5c-.1-3.3 2.5-6.1 5.8-6.6.6-.1 1.2.2 1.3.8l1.3 3.5c.2.4 0 .9-.4 1.1l-11.2 5V21h4.6c1.3 3.8 5 6.4 9 6.4 2.8 0 5.4-1.2 7-3.1v2.7h4v-17h-4v3.1c-1.6-1.9-4.2-3.1-7-3.1zM34.7 10.1h4v17h-4v-17zM45.5 10.1h4v2h2.9v4H49.5v11h-4v-17z"/></svg>`;
+                if (oldText.trim() !== primeSvg) {
+                    fileChanged = true;
+                    return openTag + "\n" + primeSvg + "\n" + closeTag;
+                }
+            } else {
+                if (oldText.trim() !== "") {
+                    fileChanged = true;
+                    return openTag + "" + closeTag;
                 }
             }
             return fullMatch;

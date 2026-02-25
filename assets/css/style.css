@@ -800,6 +800,42 @@ h4 {
   color: #475569;
 }
 
+/* PAAPI Dynamic Elements */
+.prime-container {
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  min-height: 20px;
+}
+
+.prime-icon {
+  width: auto;
+  height: 20px;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
+}
+
+.discount-update.flash-sale {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  animation: pulse-border 2s infinite;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+}
+
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
 /* Discount and Original Price Styles */
 .price-original {
   font-size: 0.95rem;
