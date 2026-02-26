@@ -219,6 +219,7 @@
                         <ul class="dropdown-menu">
                             <li><a href="/como-elegir-cojin-coxis/">Cómo elegir</a></li>
                             <li><a href="/diferencias-cojin-u-vs-anillo/">U vs anillo</a></li>
+                            <li><a href="/calculadora-ergonomia/">Calculadora Ergonomía</a></li>
                         </ul>
                     </li>
                     <li><a href="/contacto/" class="nav-link">Contacto</a></li>
@@ -369,7 +370,6 @@
                     <ul class="footer-links">
                         <li><a href="/calculadora-ergonomia/">Calculadora Ergonomía</a></li>
                         <li><a href="/sobre-nosotros/">Sobre nosotros</a></li>
-                        <li><a href="/calculadora-ergonomia/">Calculadora Ergonomía</a></li>
                         <li><a href="/contacto/">Contacto</a></li>
                     </ul>
                 </div>
@@ -385,20 +385,18 @@
     <script>
         function calculateErgonomics(e) {
             e.preventDefault();
-            const height = document.getElementById('height').value;
-
-            if (height && height >= 100 && height <= 250) {
+            const height = document.getElementById('height').value;  if (height && height >= 100 && height <= 250) {
                 // Anthropometric formulas for basic desk ergonomics
                 const heightInches = height / 2.54;
 
-                // Chair height: approx 25% of height + 1 (varies slightly)
+          eight: approx 25% of height + 1 (varies slightly)
                 // More precise metric formula: height * 0.28 (lower leg length approx)
                 const chairHeight = Math.round(height * 0.26);
 
-                // Desk height: chair height + approx elbow height from seat (height * 0.16) + 3cm margin
+                // Desk hit + approx elbow height from seat (height * 0.16) + 3cm margin
                 const deskHeight = Math.round(chairHeight + (height * 0.16) + 3);
 
-                // Monitor height: floor to eye level (approx height * 0.93)
+                // Monitor height: floor toox height * 0.93)
                 const monitorHeight = Math.round(height * 0.92);
 
                 document.getElementById('res-chair').innerText = chairHeight + " cm";
