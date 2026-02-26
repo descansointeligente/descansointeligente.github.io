@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-B06YM5N4P8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-B06YM5N4P8');
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Calculadora de Ergonomía de Escritorio | Descanso Inteligente</title>
+    <link rel="icon" type="image/png" href="/assets/img/logo.png">
+    <meta name="description"
+        content="Calcula la altura ideal de tu escritorio, silla y monitor según tu estatura para evitar dolores de espalda en el teletrabajo. Herramienta gratuita.">
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
+    <link rel="canonical" href="https://descansointeligente.es/calculadora-ergonomia/">
+
+    <meta property="og:title" content="Calculadora de Ergonomía de Escritorio | Descanso Inteligente">
+    <meta property="og:description"
+        content="Calcula la altura ideal de tu escritorio, silla y monitor según tu estatura para evitar dolores corporales en tu home office.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://descansointeligente.es/calculadora-ergonomia/">
+    <meta property="og:image" content="https://descansointeligente.es/assets/img/og-mejor-cojin-coxis.jpg">
+
+    <link rel="stylesheet" href="../assets/css/style.css">
+
+    <style>
+        .calculator-container {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+
+        .calc-form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .calc-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .calc-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .calc-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--radius-sm);
+            transition: border-color 0.3s;
+        }
+
+        .calc-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .calc-unit {
+            position: absolute;
+            right: 15px;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .calc-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .calc-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .calc-results {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+            display: none;
+            /* Hidden initially */
+        }
+
+        .calc-results.show {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--secondary);
+            background: rgba(13, 148, 136, 0.1);
+            padding: 0.3rem 0.8rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .calc-disclaimer {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+    </style>
+
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Inicio",
+        "item": "https://descansointeligente.es/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Calculadora de Ergonomía",
+        "item": "https://descansointeligente.es/calculadora-ergonomia/"
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="logo" href="/">
+                <img src="../assets/img/logo.png" alt="Descanso Inteligente Logo" width="36" height="36">
+                <span>Descanso Inteligente</span>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+                <span class="hamburger-box">
+                    <span class="hamburger-inner"></span>
+                </span>
+            </button>
+
+            <!-- Navigation -->
+            <nav class="main-nav-container" aria-label="Principal">
+                <div class="mobile-menu-header">
+                    <span class="logo-text">Menú</span>
+                    <button class="close-menu" aria-label="Cerrar menú">×</button>
+                </div>
+                <ul class="main-nav">
+                    <li><a href="/" class="nav-link">Inicio</a></li>
+                    <li><a href="/blog/" class="nav-link">Blog</a></li>
+                    <li class="nav-item-has-children">
+                        <button class="nav-link dropdown-toggle" aria-expanded="false">
+                            Catálogo <span class="arrow">▼</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="/mejor-cojin-coxis-teletrabajo/">Mejor cojín coxis</a></li>
+                            <li><a href="/cojin-ortopedico-silla-oficina/">Cojín ortopédico</a></li>
+                            <li><a href="/cojin-coxis-sofa/">Cojín para sofá</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item-has-children">
+                        <button class="nav-link dropdown-toggle" aria-expanded="false">
+                            Guías <span class="arrow">▼</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="/como-elegir-cojin-coxis/">Cómo elegir</a></li>
+                            <li><a href="/diferencias-cojin-u-vs-anillo/">U vs anillo</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="/contacto/" class="nav-link">Contacto</a></li>
+                </ul>
+            </nav>
+
+            <div class="menu-backdrop"></div>
+        </div>
+    </header>
+
+    <main class="container article-layout" style="display: block;">
+
+        <div class="breadcrumbs" style="margin-bottom: 2rem;">
+            <a href="/">Inicio</a> &raquo; <span>Calculadora de Ergonomía</span>
+        </div>
+
+        <header class="article-header" style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <h1>Calculadora de Ergonomía de Escritorio</h1>
+            <p style="font-size: 1.1rem; color: var(--text-light); margin-top: 1rem;">
+                Descubre en segundos la altura exacta (en centímetros) a la que deben estar tu silla, escritorio y
+                pantalla para mantener una postura neutra y evitar dolores en el teletrabajo.
+            </p>
+        </header>
+
+        <section class="calculator-section">
+            <div class="calculator-container">
+                <form id="ergo-form" onsubmit="calculateErgonomics(event)">
+                    <div class="calc-form-group">
+                        <label for="height" class="calc-label">¿Cuánto mides?</label>
+                        <div class="calc-input-wrapper">
+                            <input type="number" id="height" class="calc-input" placeholder="Ejemplo: 175" min="100"
+                                max="250" required>
+                            <span class="calc-unit">cm</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="calc-btn">Calcular mis medidas ideales</button>
+                </form>
+
+                <div id="results" class="calc-results">
+                    <h3 style="text-align: center; margin-bottom: 1.5rem;">📏 Tus dimensiones ergonómicas:</h3>
+
+                    <div class="result-item">
+                        <div class="result-label">
+                            <span style="font-size: 1.5rem;">🪑</span> Altura de la Silla (Asiento)
+                        </div>
+                        <div class="result-value" id="res-chair">-- cm</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">
+                            <span style="font-size: 1.5rem;">🖥️</span> Altura del Escritorio
+                        </div>
+                        <div class="result-value" id="res-desk">-- cm</div>
+                    </div>
+
+                    <div class="result-item" style="border-bottom: 1px solid #f1f5f9;">
+                        <div class="result-label">
+                            <span style="font-size: 1.5rem;">👀</span> Altura del Monitor (Borde superior)
+                        </div>
+                        <div class="result-value" id="res-monitor">-- cm</div>
+                    </div>
+
+                    <div class="calc-disclaimer">
+                        *Cálculos basados en fórmulas antropométricas estándar. Tus necesidades exactas pueden variar
+                        ligeramente según la proporción entre tu torso y tus piernas.
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <h3>¿No puedes cambiar tu escritorio de altura?</h3>
+                <p>Si tu mesa es fija y te queda alta, prueba a subir la silla y usar un reposapiés. <br>Si sufres de
+                    dolor lumbar o de coxis al sentarte tantas horas, te recomendamos usar un <a
+                        href="/mejor-cojin-coxis-teletrabajo/" style="color:var(--primary); font-weight:600;">cojín
+                        ergonómico de descarga</a>.</p>
+            </div>
+
+            <!-- SOCIAL SHARE WIDGET -->
+            <div class="social-share-container" style="max-width: 600px; margin: 3rem auto 0 auto; text-align: center;">
+                <h3 class="share-title">¿Te ha resultado útil? ¡Compártelo con tus compañeros!</h3>
+                <div class="share-buttons" style="justify-content: center;">
+                    <button class="share-btn share-btn-x" data-network="x" aria-label="Compartir en X (Twitter)">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z" />
+                        </svg>
+                        X
+                    </button>
+                    <button class="share-btn share-btn-fb" data-network="facebook" aria-label="Compartir en Facebook">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z" />
+                        </svg>
+                        Facebook
+                    </button>
+                    <button class="share-btn share-btn-wa" data-network="whatsapp" aria-label="Compartir en WhatsApp">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z" />
+                        </svg>
+                        WhatsApp
+                    </button>
+                    <button class="share-btn share-btn-in" data-network="linkedin" aria-label="Compartir en LinkedIn">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248-.822 0-1.359.54-1.359 1.248 0 .694.521 1.248 1.327 1.248h.016zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016a5.54 5.54 0 0 1 .016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225h2.4z" />
+                        </svg>
+                        LinkedIn
+                    </button>
+                    <button class="share-btn share-btn-copy" data-network="copy" aria-label="Copiar Enlace">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+                            <path
+                                d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
+                        </svg>
+                        Copiar Enlace
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a class="logo" href="/">
+                        <img src="../assets/img/logo.png" alt="Descanso Inteligente Logo" width="36" height="36">
+                        <span>Descanso Inteligente</span>
+                    </a>
+                    <p>Guías independientes de ergonomía y descanso para teletrabajo. Comparativas actualizadas con
+                        criterio.</p>
+                </div>
+                <div>
+                    <p class="footer-heading">Navegación</p>
+                    <ul class="footer-links">
+                        <li><a href="/blog/">Blog (Últimos artículos)</a></li>
+                        <li><a href="/mejor-cojin-coxis-teletrabajo/">Mejor cojín coxis</a></li>
+                        <li><a href="/cojin-ortopedico-silla-oficina/">Cojín silla oficina</a></li>
+                        <li><a href="/como-elegir-cojin-coxis/">Cómo elegir</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="footer-heading">Especiales</p>
+                    <ul class="footer-links">
+                        <li><a href="/calculadora-ergonomia/">Calculadora Ergonomía</a></li>
+                        <li><a href="/sobre-nosotros/">Sobre nosotros</a></li>
+                        <li><a href="/calculadora-ergonomia/">Calculadora Ergonomía</a></li>
+                        <li><a href="/contacto/">Contacto</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Descanso Inteligente. Todos los derechos reservados.</p>
+                <p>Participamos en el Programa de Afiliados de Amazon EU.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/script.js"></script>
+    <script>
+        function calculateErgonomics(e) {
+            e.preventDefault();
+            const height = document.getElementById('height').value;
+
+            if (height && height >= 100 && height <= 250) {
+                // Anthropometric formulas for basic desk ergonomics
+                const heightInches = height / 2.54;
+
+                // Chair height: approx 25% of height + 1 (varies slightly)
+                // More precise metric formula: height * 0.28 (lower leg length approx)
+                const chairHeight = Math.round(height * 0.26);
+
+                // Desk height: chair height + approx elbow height from seat (height * 0.16) + 3cm margin
+                const deskHeight = Math.round(chairHeight + (height * 0.16) + 3);
+
+                // Monitor height: floor to eye level (approx height * 0.93)
+                const monitorHeight = Math.round(height * 0.92);
+
+                document.getElementById('res-chair').innerText = chairHeight + " cm";
+                document.getElementById('res-desk').innerText = deskHeight + " cm";
+                document.getElementById('res-monitor').innerText = monitorHeight + " cm";
+
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.classList.add('show');
+            }
+        }
+    </script>
+</body>
+
+</html>
