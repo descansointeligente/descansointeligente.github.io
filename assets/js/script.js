@@ -106,11 +106,11 @@
       shareContainer.addEventListener('click', (e) => {
         const btn = e.target.closest('.share-btn');
         if (!btn) return;
-        
+
         const network = btn.getAttribute('data-network');
         const url = encodeURIComponent(window.location.href);
         const text = encodeURIComponent(document.title);
-        
+
         let shareUrl = '';
         switch (network) {
           case 'x':
@@ -133,7 +133,7 @@
             });
             return;
         }
-        
+
         if (shareUrl) {
           window.open(shareUrl, 'share-popup', 'width=600,height=500');
         }
@@ -164,8 +164,31 @@
     );
 
     revealElements.forEach(el => observer.observe(el));
-  
-      };
+
+    /* --- Sticky Mobile CTA Logic --- */
+    const stickyContainer = document.querySelector('.sticky-mobile-container');
+    const firstProductCard = document.querySelector('.product-rank-card.top-1') || document.querySelector('.product-rank-card') || document.querySelector('.hero');
+
+    if (stickyContainer && firstProductCard) {
+      stickyContainer.classList.add('active');
+
+      const stickyObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          /* Show sticky CTA if the element is scrolled ABOVE the viewport */
+          if (!entry.isIntersecting && entry.boundingClientRect.bottom < 0) {
+            stickyContainer.classList.add('visible');
+          } else {
+            stickyContainer.classList.remove('visible');
+          }
+        });
+      }, {
+        threshold: 0,
+        rootMargin: "0px"
+      });
+
+      stickyObserver.observe(firstProductCard);
+    }
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', onReady);
