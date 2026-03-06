@@ -209,28 +209,28 @@ async function searchRelatedProducts(keyword) {
 
         if (kw.includes('escritorio')) {
             mockData = [
-                { asin: 'mock-desk-1', title: 'Escritorio Elevable Eléctrico Altura Ajustable', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/61KcwB5Q1-L._AC_SX466_.jpg', price: '169,99 €' },
-                { asin: 'mock-desk-2', title: 'Mesa de Escritorio Elevable con Memoria', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/71N1o1y-1-L._AC_SX466_.jpg', price: '219,50 €' },
-                { asin: 'mock-desk-3', title: 'Escritorio de Pie Motorizado Marco de Acero', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/61q2wK4+j4L._AC_SX466_.jpg', price: '189,00 €' }
+                { asin: 'mock-desk-1', title: 'Escritorio Elevable Eléctrico Altura Ajustable', url: 'https://www.amazon.es/s?k=escritorio+elevable+electrico&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+1', price: '169,99 €' },
+                { asin: 'mock-desk-2', title: 'Mesa de Escritorio Elevable con Memoria', url: 'https://www.amazon.es/s?k=mesa+escritorio+elevable&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+2', price: '219,50 €' },
+                { asin: 'mock-desk-3', title: 'Escritorio de Pie Motorizado Marco de Acero', url: 'https://www.amazon.es/s?k=standing+desk&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+3', price: '189,00 €' }
             ];
         } else if (kw.includes('silla')) {
             mockData = [
-                { asin: 'mock-chair-1', title: 'Silla de Oficina Ergonómica Transpirable', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/615a+z7yZDL._AC_SX466_.jpg', price: '145,99 €' },
-                { asin: 'mock-chair-2', title: 'Silla Escritorio Ergonómica con Respaldo Lumbar', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/71Yv0-p8BqL._AC_SX466_.jpg', price: '129,50 €' },
-                { asin: 'mock-chair-3', title: 'Silla Operativa Malla Ajustable 3D', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/71Q3bW8k+hL._AC_SX466_.jpg', price: '189,90 €' }
+                { asin: 'mock-chair-1', title: 'Silla de Oficina Ergonómica Transpirable', url: 'https://www.amazon.es/s?k=silla+oficina+ergonomica&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+1', price: '145,99 €' },
+                { asin: 'mock-chair-2', title: 'Silla Escritorio Ergonómica con Respaldo Lumbar', url: 'https://www.amazon.es/s?k=silla+escritorio+respaldo+lumbar&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+2', price: '129,50 €' },
+                { asin: 'mock-chair-3', title: 'Silla Operativa Malla Ajustable 3D', url: 'https://www.amazon.es/s?k=silla+operativa+malla&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+3', price: '189,90 €' }
             ];
         } else if (kw.includes('monitor') || kw.includes('brazo')) {
             mockData = [
-                { asin: 'mock-arm-1', title: 'Brazo de Monitor Individual Articulado de Gas', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/61q3z696sLL._AC_SX466_.jpg', price: '45,99 €' },
-                { asin: 'mock-arm-2', title: 'Soporte Monitor Doble Brazo Doble VESA', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/71Qh4NrnB6L._AC_SX466_.jpg', price: '59,99 €' },
-                { asin: 'mock-arm-3', title: 'Brazo para Monitor Ajustable Rotación 360°', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/61k1lFkq8LL._AC_SX466_.jpg', price: '34,50 €' }
+                { asin: 'mock-arm-1', title: 'Brazo de Monitor Individual Articulado de Gas', url: 'https://www.amazon.es/s?k=brazo+monitor+articulado&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+1', price: '45,99 €' },
+                { asin: 'mock-arm-2', title: 'Soporte Monitor Doble Brazo Doble VESA', url: 'https://www.amazon.es/s?k=soporte+monitor+doble&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+2', price: '59,99 €' },
+                { asin: 'mock-arm-3', title: 'Brazo para Monitor Ajustable Rotación 360°', url: 'https://www.amazon.es/s?k=brazo+monitor+ajustable&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+3', price: '34,50 €' }
             ];
         } else {
             // Default mock (cojines y accesorios genéricos)
             mockData = [
-                { asin: 'mock-acc-1', title: 'Reposapiés Ergonómico de Oficina con Espuma', url: 'https://amzn.to/mockURL', image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp', price: '21,99 €' },
-                { asin: 'mock-acc-2', title: 'Soporte Lumbar Ergonómico para Silla', url: 'https://amzn.to/mockURL', image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp', price: '28,99 €' },
-                { asin: 'mock-acc-3', title: 'Soporte de Monitor Ajustable', url: 'https://amzn.to/mockURL', image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp', price: '19,50 €' }
+                { asin: 'mock-acc-1', title: 'Reposapiés Ergonómico de Oficina con Espuma', url: 'https://www.amazon.es/s?k=reposapies+ergonomico&tag=descansointel-21', image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp', price: '21,99 €' },
+                { asin: 'mock-acc-2', title: 'Soporte Lumbar Ergonómico para Silla', url: 'https://www.amazon.es/s?k=soporte+lumbar+silla&tag=descansointel-21', image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp', price: '28,99 €' },
+                { asin: 'mock-acc-3', title: 'Soporte de Monitor Ajustable', url: 'https://www.amazon.es/s?k=soporte+elevador+monitor&tag=descansointel-21', image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp', price: '19,50 €' }
             ];
         }
 
