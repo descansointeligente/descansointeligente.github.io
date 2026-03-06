@@ -2,8 +2,8 @@ name: Update Amazon Prices
 
 on:
   schedule:
-    # Run at 08:00 every Monday
-    - cron: '0 8 * * 1'
+    # Run at 02:00 every day
+    - cron: '0 2 * * *'
   workflow_dispatch:
 
 permissions:

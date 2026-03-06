@@ -37,13 +37,16 @@ async function fetchProductData(asin) {
         let stars = '4,3';
         let priceNum = 29.99;
         let isAmazonChoice = false;
+        let mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Accesorio+Amazon`;
 
+        // Cojines
         if (asin === 'B0F1VD176V') {
             price = '33,99 €';
             originalPrice = '45,89 €';
             discount = '-26%';
             stars = '4,5';
             priceNum = 33.99;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Fortem`;
         } else if (asin === 'B077G7D73D') {
             price = '30,99 €';
             originalPrice = '37,99 €';
@@ -51,9 +54,41 @@ async function fetchProductData(asin) {
             stars = '4,2';
             priceNum = 30.99;
             isAmazonChoice = true;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Marnur`;
         } else if (asin === 'B01N5LH26Y') {
             price = '27,90 €';
             priceNum = 27.90;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Donut`;
+            // Escritorios
+        } else if (asin === 'B08B3QGGBM') {
+            price = '169,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+FLEXISPOT`;
+        } else if (asin === 'B0CDBQ6TMD') {
+            price = '189,50 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Sanodesk`;
+        } else if (asin === 'B0BZS4C9F6') {
+            price = '145,00 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Devoko`;
+            // Sillas
+        } else if (asin === 'B07GNDDNMW') {
+            price = '199,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+SIHOO`;
+        } else if (asin === 'B07QG1B283') {
+            price = '129,50 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+SONGMICS`;
+        } else if (asin === 'B0BQJ1R5R9') {
+            price = '159,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+Ticova`;
+            // Brazos Monitor
+        } else if (asin === 'B01MR397OH') {
+            price = '39,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Brazo+Invision`;
+        } else if (asin === 'B0859W3D8J') {
+            price = '45,00 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Soporte+ErGear`;
+        } else if (asin === 'B07T4HYSVD') {
+            price = '59,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Dobla+Brazo+HUANUO`;
         }
 
         return {
@@ -62,7 +97,8 @@ async function fetchProductData(asin) {
             stars: stars,
             discount: discount,
             priceNum: priceNum,
-            isAmazonChoice: isAmazonChoice
+            isAmazonChoice: isAmazonChoice,
+            imageUrl: mockImage
         };
     }
 
@@ -70,6 +106,7 @@ async function fetchProductData(asin) {
         const payload = JSON.stringify({
             ItemIds: [asin],
             Resources: [
+                "Images.Primary.Large",
                 "Offers.Listings.Price",
                 "Offers.Listings.SavingBasis",
                 "Offers.Listings.DeliveryInfo.IsPrimeEligible",
@@ -156,6 +193,12 @@ async function fetchProductData(asin) {
                             isPrime = true;
                         }
 
+                        // Image
+                        let imageUrl = null;
+                        if (item.Images && item.Images.Primary && item.Images.Primary.Large) {
+                            imageUrl = item.Images.Primary.Large.URL;
+                        }
+
                         // Defaulting stars as PAAPI sometimes restricts review summaries
                         const starRating = "4,5";
                         const isAmazonChoice = false;
@@ -167,7 +210,8 @@ async function fetchProductData(asin) {
                             discount: discount,
                             priceNum: numPrice,
                             isAmazonChoice: isAmazonChoice,
-                            isPrime: isPrime
+                            isPrime: isPrime,
+                            imageUrl: imageUrl
                         });
                     } else {
                         console.error(`${colors.red}[ERROR] Item not found in PAAPI for ${asin}${colors.reset}`);
@@ -193,30 +237,39 @@ async function fetchProductData(asin) {
  */
 async function searchRelatedProducts(keyword) {
     if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY) {
-        console.log(`[SIMULATION] No Amazon Keys provided. Returning mock search for '${keyword}'.`);
-        return [
-            {
-                asin: 'mock1',
-                title: 'Reposapiés Ergonómico de Oficina con Espuma Viscoelástica',
-                url: 'https://amzn.to/mockURL',
-                image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp',
-                price: '21,99 €'
-            },
-            {
-                asin: 'mock2',
-                title: 'Soporte Lumbar Ergonómico para Silla de Escritorio',
-                url: 'https://amzn.to/mockURL',
-                image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp',
-                price: '28,99 €'
-            },
-            {
-                asin: 'mock3',
-                title: 'Soporte de Monitor Ajustable de Madera',
-                url: 'https://amzn.to/mockURL',
-                image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp',
-                price: '19,50 €'
-            }
-        ];
+        console.log(`${colors.yellow}[SIMULATION] No Amazon Keys provided. Returning mock search for '${keyword}'.${colors.reset}`);
+
+        let kw = keyword.toLowerCase();
+        let mockData = [];
+
+        if (kw.includes('escritorio')) {
+            mockData = [
+                { asin: 'mock-desk-1', title: 'Escritorio Elevable Eléctrico Altura Ajustable', url: 'https://www.amazon.es/s?k=escritorio+elevable+electrico&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+1', price: '169,99 €' },
+                { asin: 'mock-desk-2', title: 'Mesa de Escritorio Elevable con Memoria', url: 'https://www.amazon.es/s?k=mesa+escritorio+elevable&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+2', price: '219,50 €' },
+                { asin: 'mock-desk-3', title: 'Escritorio de Pie Motorizado Marco de Acero', url: 'https://www.amazon.es/s?k=standing+desk&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+3', price: '189,00 €' }
+            ];
+        } else if (kw.includes('silla')) {
+            mockData = [
+                { asin: 'mock-chair-1', title: 'Silla de Oficina Ergonómica Transpirable', url: 'https://www.amazon.es/s?k=silla+oficina+ergonomica&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+1', price: '145,99 €' },
+                { asin: 'mock-chair-2', title: 'Silla Escritorio Ergonómica con Respaldo Lumbar', url: 'https://www.amazon.es/s?k=silla+escritorio+respaldo+lumbar&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+2', price: '129,50 €' },
+                { asin: 'mock-chair-3', title: 'Silla Operativa Malla Ajustable 3D', url: 'https://www.amazon.es/s?k=silla+operativa+malla&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+3', price: '189,90 €' }
+            ];
+        } else if (kw.includes('monitor') || kw.includes('brazo')) {
+            mockData = [
+                { asin: 'mock-arm-1', title: 'Brazo de Monitor Individual Articulado de Gas', url: 'https://www.amazon.es/s?k=brazo+monitor+articulado&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+1', price: '45,99 €' },
+                { asin: 'mock-arm-2', title: 'Soporte Monitor Doble Brazo Doble VESA', url: 'https://www.amazon.es/s?k=soporte+monitor+doble&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+2', price: '59,99 €' },
+                { asin: 'mock-arm-3', title: 'Brazo para Monitor Ajustable Rotación 360°', url: 'https://www.amazon.es/s?k=brazo+monitor+ajustable&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+3', price: '34,50 €' }
+            ];
+        } else {
+            // Default mock (cojines y accesorios genéricos)
+            mockData = [
+                { asin: 'mock-acc-1', title: 'Reposapiés Ergonómico de Oficina con Espuma', url: 'https://www.amazon.es/s?k=reposapies+ergonomico&tag=descansointel-21', image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp', price: '21,99 €' },
+                { asin: 'mock-acc-2', title: 'Soporte Lumbar Ergonómico para Silla', url: 'https://www.amazon.es/s?k=soporte+lumbar+silla&tag=descansointel-21', image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp', price: '28,99 €' },
+                { asin: 'mock-acc-3', title: 'Soporte de Monitor Ajustable', url: 'https://www.amazon.es/s?k=soporte+elevador+monitor&tag=descansointel-21', image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp', price: '19,50 €' }
+            ];
+        }
+
+        return mockData;
     }
 
     return new Promise((resolve, reject) => {
@@ -345,6 +398,7 @@ async function main() {
     // 1. Scan files for ASINs and Keywords to fetch
     const regexPriceInfo = /data-asin=["']([^"']+)["']/g;
     const regexSearchKeywords = /data-search-keywords=["']([^"']+)["']/g;
+    const regexImageInfo = /data-asin-image=["']([^"']+)["']/g;
 
     for (const file of htmlFiles) {
         let content = fs.readFileSync(file, 'utf8');
@@ -354,6 +408,9 @@ async function main() {
         }
         while ((match = regexSearchKeywords.exec(content)) !== null) {
             keywordsToSearch.add(match[1]);
+        }
+        while ((match = regexImageInfo.exec(content)) !== null) {
+            asinsToFetch.add(match[1]);
         }
     }
 
@@ -584,6 +641,20 @@ async function main() {
                 if (oldText.trim() !== "") {
                     fileChanged = true;
                     return openTag + "" + closeTag;
+                }
+            }
+            return fullMatch;
+        });
+
+        // Update Images (Primary Large API Image)
+        const regexImgTag = /(<img[^>]+data-asin-image=["']([^"']+)["'][^>]*>)/g;
+        newContent = newContent.replace(regexImgTag, (fullMatch, fullTag, asin) => {
+            const data = productDataMap[asin];
+            if (data && data.imageUrl) {
+                const srcMatch = fullTag.match(/src=["']([^"']+)["']/);
+                if (srcMatch && srcMatch[1] !== data.imageUrl) {
+                    fileChanged = true;
+                    return fullTag.replace(srcMatch[0], `src="${data.imageUrl}"`);
                 }
             }
             return fullMatch;
