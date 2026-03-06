@@ -202,30 +202,39 @@ async function fetchProductData(asin) {
  */
 async function searchRelatedProducts(keyword) {
     if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY) {
-        console.log(`[SIMULATION] No Amazon Keys provided. Returning mock search for '${keyword}'.`);
-        return [
-            {
-                asin: 'mock1',
-                title: 'Reposapiés Ergonómico de Oficina con Espuma Viscoelástica',
-                url: 'https://amzn.to/mockURL',
-                image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp',
-                price: '21,99 €'
-            },
-            {
-                asin: 'mock2',
-                title: 'Soporte Lumbar Ergonómico para Silla de Escritorio',
-                url: 'https://amzn.to/mockURL',
-                image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp',
-                price: '28,99 €'
-            },
-            {
-                asin: 'mock3',
-                title: 'Soporte de Monitor Ajustable de Madera',
-                url: 'https://amzn.to/mockURL',
-                image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp',
-                price: '19,50 €'
-            }
-        ];
+        console.log(`${colors.yellow}[SIMULATION] No Amazon Keys provided. Returning mock search for '${keyword}'.${colors.reset}`);
+
+        let kw = keyword.toLowerCase();
+        let mockData = [];
+
+        if (kw.includes('escritorio')) {
+            mockData = [
+                { asin: 'mock-desk-1', title: 'Escritorio Elevable Eléctrico Altura Ajustable', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/61KcwB5Q1-L._AC_SX466_.jpg', price: '169,99 €' },
+                { asin: 'mock-desk-2', title: 'Mesa de Escritorio Elevable con Memoria', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/71N1o1y-1-L._AC_SX466_.jpg', price: '219,50 €' },
+                { asin: 'mock-desk-3', title: 'Escritorio de Pie Motorizado Marco de Acero', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/61q2wK4+j4L._AC_SX466_.jpg', price: '189,00 €' }
+            ];
+        } else if (kw.includes('silla')) {
+            mockData = [
+                { asin: 'mock-chair-1', title: 'Silla de Oficina Ergonómica Transpirable', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/615a+z7yZDL._AC_SX466_.jpg', price: '145,99 €' },
+                { asin: 'mock-chair-2', title: 'Silla Escritorio Ergonómica con Respaldo Lumbar', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/71Yv0-p8BqL._AC_SX466_.jpg', price: '129,50 €' },
+                { asin: 'mock-chair-3', title: 'Silla Operativa Malla Ajustable 3D', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/71Q3bW8k+hL._AC_SX466_.jpg', price: '189,90 €' }
+            ];
+        } else if (kw.includes('monitor') || kw.includes('brazo')) {
+            mockData = [
+                { asin: 'mock-arm-1', title: 'Brazo de Monitor Individual Articulado de Gas', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/61q3z696sLL._AC_SX466_.jpg', price: '45,99 €' },
+                { asin: 'mock-arm-2', title: 'Soporte Monitor Doble Brazo Doble VESA', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/71Qh4NrnB6L._AC_SX466_.jpg', price: '59,99 €' },
+                { asin: 'mock-arm-3', title: 'Brazo para Monitor Ajustable Rotación 360°', url: 'https://amzn.to/mockURL', image: 'https://m.media-amazon.com/images/I/61k1lFkq8LL._AC_SX466_.jpg', price: '34,50 €' }
+            ];
+        } else {
+            // Default mock (cojines y accesorios genéricos)
+            mockData = [
+                { asin: 'mock-acc-1', title: 'Reposapiés Ergonómico de Oficina con Espuma', url: 'https://amzn.to/mockURL', image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp', price: '21,99 €' },
+                { asin: 'mock-acc-2', title: 'Soporte Lumbar Ergonómico para Silla', url: 'https://amzn.to/mockURL', image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp', price: '28,99 €' },
+                { asin: 'mock-acc-3', title: 'Soporte de Monitor Ajustable', url: 'https://amzn.to/mockURL', image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp', price: '19,50 €' }
+            ];
+        }
+
+        return mockData;
     }
 
     return new Promise((resolve, reject) => {
