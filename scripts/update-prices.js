@@ -37,13 +37,16 @@ async function fetchProductData(asin) {
         let stars = '4,3';
         let priceNum = 29.99;
         let isAmazonChoice = false;
+        let mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Accesorio+Amazon`;
 
+        // Cojines
         if (asin === 'B0F1VD176V') {
             price = '33,99 €';
             originalPrice = '45,89 €';
             discount = '-26%';
             stars = '4,5';
             priceNum = 33.99;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Fortem`;
         } else if (asin === 'B077G7D73D') {
             price = '30,99 €';
             originalPrice = '37,99 €';
@@ -51,9 +54,41 @@ async function fetchProductData(asin) {
             stars = '4,2';
             priceNum = 30.99;
             isAmazonChoice = true;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Marnur`;
         } else if (asin === 'B01N5LH26Y') {
             price = '27,90 €';
             priceNum = 27.90;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Donut`;
+            // Escritorios
+        } else if (asin === 'B08B3QGGBM') {
+            price = '169,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+FLEXISPOT`;
+        } else if (asin === 'B0CDBQ6TMD') {
+            price = '189,50 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Sanodesk`;
+        } else if (asin === 'B0BZS4C9F6') {
+            price = '145,00 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Devoko`;
+            // Sillas
+        } else if (asin === 'B07GNDDNMW') {
+            price = '199,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+SIHOO`;
+        } else if (asin === 'B07QG1B283') {
+            price = '129,50 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+SONGMICS`;
+        } else if (asin === 'B0BQJ1R5R9') {
+            price = '159,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+Ticova`;
+            // Brazos Monitor
+        } else if (asin === 'B01MR397OH') {
+            price = '39,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Brazo+Invision`;
+        } else if (asin === 'B0859W3D8J') {
+            price = '45,00 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Soporte+ErGear`;
+        } else if (asin === 'B07T4HYSVD') {
+            price = '59,99 €';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Dobla+Brazo+HUANUO`;
         }
 
         return {
@@ -63,7 +98,7 @@ async function fetchProductData(asin) {
             discount: discount,
             priceNum: priceNum,
             isAmazonChoice: isAmazonChoice,
-            imageUrl: null // No mock image
+            imageUrl: mockImage
         };
     }
 
