@@ -62,7 +62,8 @@ async function fetchProductData(asin) {
             stars: stars,
             discount: discount,
             priceNum: priceNum,
-            isAmazonChoice: isAmazonChoice
+            isAmazonChoice: isAmazonChoice,
+            imageUrl: null // No mock image
         };
     }
 
@@ -70,6 +71,7 @@ async function fetchProductData(asin) {
         const payload = JSON.stringify({
             ItemIds: [asin],
             Resources: [
+                "Images.Primary.Large",
                 "Offers.Listings.Price",
                 "Offers.Listings.SavingBasis",
                 "Offers.Listings.DeliveryInfo.IsPrimeEligible",
@@ -156,6 +158,12 @@ async function fetchProductData(asin) {
                             isPrime = true;
                         }
 
+                        // Image
+                        let imageUrl = null;
+                        if (item.Images && item.Images.Primary && item.Images.Primary.Large) {
+                            imageUrl = item.Images.Primary.Large.URL;
+                        }
+
                         // Defaulting stars as PAAPI sometimes restricts review summaries
                         const starRating = "4,5";
                         const isAmazonChoice = false;
@@ -167,7 +175,8 @@ async function fetchProductData(asin) {
                             discount: discount,
                             priceNum: numPrice,
                             isAmazonChoice: isAmazonChoice,
-                            isPrime: isPrime
+                            isPrime: isPrime,
+                            imageUrl: imageUrl
                         });
                     } else {
                         console.error(`${colors.red}[ERROR] Item not found in PAAPI for ${asin}${colors.reset}`);
@@ -345,6 +354,7 @@ async function main() {
     // 1. Scan files for ASINs and Keywords to fetch
     const regexPriceInfo = /data-asin=["']([^"']+)["']/g;
     const regexSearchKeywords = /data-search-keywords=["']([^"']+)["']/g;
+    const regexImageInfo = /data-asin-image=["']([^"']+)["']/g;
 
     for (const file of htmlFiles) {
         let content = fs.readFileSync(file, 'utf8');
@@ -354,6 +364,9 @@ async function main() {
         }
         while ((match = regexSearchKeywords.exec(content)) !== null) {
             keywordsToSearch.add(match[1]);
+        }
+        while ((match = regexImageInfo.exec(content)) !== null) {
+            asinsToFetch.add(match[1]);
         }
     }
 
@@ -584,6 +597,20 @@ async function main() {
                 if (oldText.trim() !== "") {
                     fileChanged = true;
                     return openTag + "" + closeTag;
+                }
+            }
+            return fullMatch;
+        });
+
+        // Update Images (Primary Large API Image)
+        const regexImgTag = /(<img[^>]+data-asin-image=["']([^"']+)["'][^>]*>)/g;
+        newContent = newContent.replace(regexImgTag, (fullMatch, fullTag, asin) => {
+            const data = productDataMap[asin];
+            if (data && data.imageUrl) {
+                const srcMatch = fullTag.match(/src=["']([^"']+)["']/);
+                if (srcMatch && srcMatch[1] !== data.imageUrl) {
+                    fileChanged = true;
+                    return fullTag.replace(srcMatch[0], `src="${data.imageUrl}"`);
                 }
             }
             return fullMatch;
