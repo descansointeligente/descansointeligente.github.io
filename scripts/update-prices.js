@@ -60,25 +60,31 @@ async function fetchProductData(asin) {
             priceNum = 27.90;
             mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Donut`;
             // Escritorios
-        } else if (asin === 'B08B3QGGBM') {
-            price = '169,99 €';
-            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+FLEXISPOT`;
-        } else if (asin === 'B0CDBQ6TMD') {
-            price = '189,50 €';
-            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Sanodesk`;
-        } else if (asin === 'B0BZS4C9F6') {
-            price = '145,00 €';
-            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Devoko`;
+        } else if (asin === 'B0C1BQTG87') {
+            price = '46,99 €';
+            priceNum = 46.99;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+ODK`;
+        } else if (asin === 'B0DNSLWKFX') {
+            price = '118,99 €';
+            originalPrice = '139,99 €';
+            discount = '-15%';
+            priceNum = 118.99;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+SONGMICS`;
+        } else if (asin === 'B0D9MGDDHD') {
+            price = '104,49 €';
+            originalPrice = '125,99 €';
+            discount = '-17%';
+            priceNum = 104.49;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Escritorio+ErGear`;
             // Sillas
-        } else if (asin === 'B07GNDDNMW') {
-            price = '199,99 €';
-            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+SIHOO`;
-        } else if (asin === 'B07QG1B283') {
-            price = '129,50 €';
-            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+SONGMICS`;
-        } else if (asin === 'B0BQJ1R5R9') {
-            price = '159,99 €';
-            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+Ticova`;
+        } else if (asin === 'B0G6WWQ4P2') {
+            price = '52,99 €';
+            priceNum = 52.99;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+EveryKip`;
+        } else if (asin === 'B0D17RR22L') {
+            price = '69,99 €';
+            priceNum = 69.99;
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+JUPPLIES`;
             // Brazos Monitor
         } else if (asin === 'B01MR397OH') {
             price = '39,99 €';
