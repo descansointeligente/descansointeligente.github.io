@@ -236,6 +236,22 @@ h4 {
   padding-left: 1.8rem;
 }
 
+.dropdown-header {
+  display: block;
+  padding: 0.5rem 1.5rem 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: 0.5rem 0;
+}
+
 .menu-toggle {
   display: none;
   background: none;
