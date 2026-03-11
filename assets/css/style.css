@@ -236,6 +236,38 @@ h4 {
   padding-left: 1.8rem;
 }
 
+.dropdown-header {
+  display: block;
+  padding: 0.5rem 1.5rem 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: 0.5rem 0;
+}
+
+.dropdown-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+  padding: 1rem;
+}
+
+.dropdown-menu-grid .dropdown-header {
+  grid-column: span 2;
+  margin-top: 0.5rem;
+}
+
+.dropdown-menu-grid .dropdown-divider {
+  grid-column: span 2;
+}
+
 .menu-toggle {
   display: none;
   background: none;
