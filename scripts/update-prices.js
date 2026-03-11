@@ -86,9 +86,21 @@ async function fetchProductData(asin) {
             priceNum = 69.99;
             mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Silla+JUPPLIES`;
             // Brazos Monitor
+        } else if (asin === 'B0CKPH347G') {
+            price = '38,80 €';
+            priceNum = 38.80;
+            stars = '4,6';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Brazo+BONTEC+Gas`;
+        } else if (asin === 'B091D2CKC7') {
+            price = '29,99 €';
+            priceNum = 29.99;
+            stars = '4,7';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Brazo+Ergosolid`;
         } else if (asin === 'B01MR397OH') {
-            price = '39,99 €';
-            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Brazo+Invision`;
+            price = '23,61 €';
+            priceNum = 23.61;
+            stars = '4,6';
+            mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Soporte+BONTEC+Dual`;
         } else if (asin === 'B0859W3D8J') {
             price = '45,00 €';
             mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Soporte+ErGear`;
