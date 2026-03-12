@@ -140,6 +140,86 @@
       });
     }
 
+    /* --- Homepage search / discovery --- */
+    const searchSection = document.querySelector('.site-search');
+    if (searchSection) {
+      const input = searchSection.querySelector('#site-search-input');
+      const clearButton = searchSection.querySelector('.site-search-clear');
+      const cards = Array.from(searchSection.querySelectorAll('.search-result-card'));
+      const tags = Array.from(searchSection.querySelectorAll('[data-search-tag]'));
+      const emptyState = searchSection.querySelector('[data-search-empty]');
+      const countNode = searchSection.querySelector('[data-search-count]');
+
+      const normalize = (value) => value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+      const applySearch = (rawTerm) => {
+        const term = normalize(rawTerm || '');
+        let visibleCount = 0;
+
+        cards.forEach((card) => {
+          const haystack = normalize(`${card.dataset.search || ''} ${card.textContent || ''}`);
+          const matches = !term || haystack.includes(term);
+          card.hidden = !matches;
+          if (matches) visibleCount += 1;
+        });
+
+        if (countNode) {
+          countNode.textContent = String(visibleCount);
+        }
+
+        if (clearButton) {
+          clearButton.hidden = !term;
+        }
+
+        if (emptyState) {
+          emptyState.hidden = visibleCount > 0;
+        }
+      };
+
+      if (input) {
+        input.addEventListener('input', () => applySearch(input.value));
+        input.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter') return;
+
+          const firstVisibleCard = cards.find((card) => !card.hidden);
+          if (!firstVisibleCard) return;
+
+          window.location.href = firstVisibleCard.href;
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        const query = params.get('q');
+        if (query) {
+          input.value = query;
+        }
+      }
+
+      if (clearButton && input) {
+        clearButton.addEventListener('click', () => {
+          input.value = '';
+          applySearch('');
+          input.focus();
+        });
+      }
+
+      tags.forEach((tag) => {
+        tag.addEventListener('click', () => {
+          const query = tag.getAttribute('data-search-tag') || '';
+          if (input) {
+            input.value = query;
+            input.focus();
+          }
+          applySearch(query);
+        });
+      });
+
+      applySearch(input ? input.value : '');
+    }
+
     /* --- Scroll reveal with stagger --- */
     const revealElements = document.querySelectorAll('.reveal-on-scroll');
     if (revealElements.length === 0) return;
