@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const { URL } = require('url');
 
 // Simple console colors
 const colors = {
@@ -10,33 +11,395 @@ const colors = {
     yellow: "\x1b[33m",
     blue: "\x1b[34m"
 };
-const aws4 = require('aws4');
-
 // Amazon Creators API Configuration
-const AMAZON_ACCESS_KEY = process.env.AMAZON_ACCESS_KEY;
-const AMAZON_SECRET_KEY = process.env.AMAZON_SECRET_KEY;
+const AMAZON_CREATOR_CLIENT_ID = process.env.AMAZON_CREATOR_CLIENT_ID;
+const AMAZON_CREATOR_CLIENT_SECRET = process.env.AMAZON_CREATOR_CLIENT_SECRET;
+const AMAZON_CREATOR_VERSION = process.env.AMAZON_CREATOR_VERSION || '3.2';
 const AMAZON_PARTNER_TAG = process.env.AMAZON_PARTNER_TAG;
-const AMAZON_HOST = 'webservices.amazon.es';
-const AMAZON_REGION = 'eu-west-1';
+const AMAZON_MARKETPLACE = process.env.AMAZON_MARKETPLACE || 'www.amazon.es';
+const AMAZON_LANG = process.env.AMAZON_LANG || 'es_ES';
+const AMAZON_CURRENCY = process.env.AMAZON_CURRENCY || 'EUR';
+const AMAZON_API_BASE_URL = 'https://creatorsapi.amazon';
+const REQUEST_TIMEOUT_MS = Number(process.env.AMAZON_REQUEST_TIMEOUT_MS || 20000);
+
+let accessTokenCache = null;
+
+function parseCliArgs(argv) {
+    return {
+        dryRun: argv.includes('--dry-run'),
+        strict: argv.includes('--strict')
+    };
+}
+
+function getCreatorsConfigSummary() {
+    return {
+        version: AMAZON_CREATOR_VERSION,
+        marketplace: AMAZON_MARKETPLACE,
+        language: AMAZON_LANG,
+        currency: AMAZON_CURRENCY,
+        hasClientId: Boolean(AMAZON_CREATOR_CLIENT_ID),
+        hasClientSecret: Boolean(AMAZON_CREATOR_CLIENT_SECRET),
+        hasPartnerTag: Boolean(AMAZON_PARTNER_TAG),
+        requestTimeoutMs: REQUEST_TIMEOUT_MS
+    };
+}
+
+function validateCreatorsConfiguration() {
+    const supportedVersions = new Set(['2.1', '2.2', '2.3', '3.1', '3.2', '3.3']);
+    const issues = [];
+    const warnings = [];
+
+    if (!Number.isFinite(REQUEST_TIMEOUT_MS) || REQUEST_TIMEOUT_MS < 1000) {
+        issues.push(`Invalid AMAZON_REQUEST_TIMEOUT_MS value: ${process.env.AMAZON_REQUEST_TIMEOUT_MS || REQUEST_TIMEOUT_MS}`);
+    }
+
+    if (!supportedVersions.has(AMAZON_CREATOR_VERSION)) {
+        warnings.push(`Unknown AMAZON_CREATOR_VERSION '${AMAZON_CREATOR_VERSION}'. Expected one of: ${Array.from(supportedVersions).join(', ')}`);
+    }
+
+    if (!/^www\.amazon\./.test(AMAZON_MARKETPLACE)) {
+        warnings.push(`Unexpected AMAZON_MARKETPLACE '${AMAZON_MARKETPLACE}'.`);
+    }
+
+    if (!/^[a-z]{2}_[A-Z]{2}$/.test(AMAZON_LANG)) {
+        warnings.push(`Unexpected AMAZON_LANG '${AMAZON_LANG}'.`);
+    }
+
+    if (!/^[A-Z]{3}$/.test(AMAZON_CURRENCY)) {
+        warnings.push(`Unexpected AMAZON_CURRENCY '${AMAZON_CURRENCY}'.`);
+    }
+
+    if ((AMAZON_CREATOR_CLIENT_ID || AMAZON_CREATOR_CLIENT_SECRET || AMAZON_PARTNER_TAG) && !hasCreatorsCredentials()) {
+        issues.push('Incomplete Creators API credentials. Define AMAZON_CREATOR_CLIENT_ID, AMAZON_CREATOR_CLIENT_SECRET and AMAZON_PARTNER_TAG together.');
+    }
+
+    return { issues, warnings };
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function hasCreatorsCredentials() {
+    return Boolean(
+        AMAZON_CREATOR_CLIENT_ID &&
+        AMAZON_CREATOR_CLIENT_SECRET &&
+        AMAZON_PARTNER_TAG
+    );
+}
+
+function getTokenEndpoint(version) {
+    const majorVersion = String(version || '').split('.')[0];
+
+    if (majorVersion === '3') {
+        const endpoints = {
+            '3.1': 'https://api.amazon.com/auth/o2/token',
+            '3.2': 'https://api.amazon.co.uk/auth/o2/token',
+            '3.3': 'https://api.amazon.co.jp/auth/o2/token'
+        };
+
+        return endpoints[version] || endpoints['3.2'];
+    }
+
+    const endpoints = {
+        '2.1': 'https://creatorsapi.auth.us-east-1.amazoncognito.com/oauth2/token',
+        '2.2': 'https://creatorsapi.auth.eu-south-2.amazoncognito.com/oauth2/token',
+        '2.3': 'https://creatorsapi.auth.us-west-2.amazoncognito.com/oauth2/token'
+    };
+
+    return endpoints[version] || endpoints['2.2'];
+}
+
+function formatMoney(amount, currency) {
+    if (typeof amount !== 'number') return null;
+
+    try {
+        return new Intl.NumberFormat('es-ES', {
+            style: 'currency',
+            currency: currency || AMAZON_CURRENCY
+        }).format(amount).replace(/\u00a0/g, ' ');
+    } catch (_) {
+        return `${amount.toFixed(2).replace('.', ',')} ${currency || AMAZON_CURRENCY}`;
+    }
+}
+
+function normalizeDisplayAmount(money) {
+    if (!money) return null;
+    if (typeof money.amount === 'number') {
+        return formatMoney(money.amount, money.currency);
+    }
+    return money.displayAmount || null;
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function requestJson(urlString, options = {}, body = null) {
+    return new Promise((resolve, reject) => {
+        const url = new URL(urlString);
+
+        const requestOptions = {
+            protocol: url.protocol,
+            hostname: url.hostname,
+            port: url.port || 443,
+            path: `${url.pathname}${url.search}`,
+            method: options.method || 'GET',
+            headers: options.headers || {}
+        };
+
+        const req = https.request(requestOptions, (res) => {
+            const chunks = [];
+
+            res.on('data', chunk => chunks.push(chunk));
+            res.on('end', () => {
+                const rawBody = Buffer.concat(chunks).toString('utf8');
+                const isJson = (res.headers['content-type'] || '').includes('application/json');
+                let parsedBody = rawBody;
+
+                if (isJson && rawBody) {
+                    try {
+                        parsedBody = JSON.parse(rawBody);
+                    } catch (error) {
+                        return reject(new Error(`Invalid JSON response: ${error.message}`));
+                    }
+                }
+
+                if (res.statusCode < 200 || res.statusCode >= 300) {
+                    const message = typeof parsedBody === 'string'
+                        ? parsedBody
+                        : JSON.stringify(parsedBody);
+                    return reject(new Error(`HTTP ${res.statusCode}: ${message}`));
+                }
+
+                resolve(parsedBody);
+            });
+        });
+
+        req.on('error', reject);
+        req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+            req.destroy(new Error(`Request timeout after ${REQUEST_TIMEOUT_MS}ms`));
+        });
+
+        if (body) {
+            req.write(body);
+        }
+
+        req.end();
+    });
+}
+
+async function getAccessToken() {
+    if (!hasCreatorsCredentials()) return null;
+
+    if (accessTokenCache && accessTokenCache.expiresAt > Date.now() + 60_000) {
+        return accessTokenCache.token;
+    }
+
+    const version = AMAZON_CREATOR_VERSION;
+    const tokenEndpoint = getTokenEndpoint(version);
+    const isV3 = String(version).startsWith('3.');
+
+    let headers;
+    let body;
+
+    if (isV3) {
+        headers = {
+            'Content-Type': 'application/json'
+        };
+        body = JSON.stringify({
+            grant_type: 'client_credentials',
+            client_id: AMAZON_CREATOR_CLIENT_ID,
+            client_secret: AMAZON_CREATOR_CLIENT_SECRET,
+            scope: 'creatorsapi::default'
+        });
+    } else {
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${Buffer.from(`${AMAZON_CREATOR_CLIENT_ID}:${AMAZON_CREATOR_CLIENT_SECRET}`).toString('base64')}`
+        };
+        body = 'grant_type=client_credentials&scope=creatorsapi%2Fdefault';
+    }
+
+    const response = await requestJson(tokenEndpoint, {
+        method: 'POST',
+        headers
+    }, body);
+
+    if (!response.access_token) {
+        throw new Error('Creators API token response missing access_token');
+    }
+
+    const expiresInMs = (response.expires_in || 3600) * 1000;
+    accessTokenCache = {
+        token: response.access_token,
+        expiresAt: Date.now() + expiresInMs
+    };
+
+    return accessTokenCache.token;
+}
+
+async function creatorsApiPost(endpointPath, payload) {
+    const token = await getAccessToken();
+    if (!token) {
+        throw new Error('Creators API access token unavailable');
+    }
+    const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'x-marketplace': AMAZON_MARKETPLACE
+    };
+
+    if (String(AMAZON_CREATOR_VERSION).startsWith('2.')) {
+        headers.Version = AMAZON_CREATOR_VERSION;
+    }
+
+    return requestJson(`${AMAZON_API_BASE_URL}${endpointPath}`, {
+        method: 'POST',
+        headers
+    }, JSON.stringify(payload));
+}
+
+function parseOfferListing(listing) {
+    if (!listing) {
+        return {
+            price: null,
+            priceNum: null,
+            originalPrice: null,
+            originalPriceNum: null,
+            discount: null,
+            savingsAmount: null,
+            isBuyBoxWinner: false,
+            availability: null
+        };
+    }
+
+    const priceMoney = listing.price && listing.price.money ? listing.price.money : null;
+    const savingBasisMoney = listing.savingBasis && listing.savingBasis.money ? listing.savingBasis.money : null;
+    const savingsMoney = listing.savings && listing.savings.money ? listing.savings.money : null;
+
+    let discount = null;
+    if (typeof listing.savings?.percentage === 'number') {
+        discount = `-${Math.round(listing.savings.percentage)}%`;
+    } else if (
+        savingBasisMoney &&
+        typeof savingBasisMoney.amount === 'number' &&
+        priceMoney &&
+        typeof priceMoney.amount === 'number' &&
+        savingBasisMoney.amount > priceMoney.amount
+    ) {
+        const percentage = Math.round(((savingBasisMoney.amount - priceMoney.amount) / savingBasisMoney.amount) * 100);
+        discount = `-${percentage}%`;
+    }
+
+    return {
+        price: normalizeDisplayAmount(priceMoney),
+        priceNum: typeof priceMoney?.amount === 'number' ? priceMoney.amount : null,
+        originalPrice: normalizeDisplayAmount(savingBasisMoney),
+        originalPriceNum: typeof savingBasisMoney?.amount === 'number' ? savingBasisMoney.amount : null,
+        discount,
+        savingsAmount: normalizeDisplayAmount(savingsMoney),
+        isBuyBoxWinner: listing.isBuyBoxWinner === true,
+        availability: listing.availability?.type || null,
+        dealDetails: listing.dealDetails || null,
+        merchantName: listing.merchantInfo?.name || null
+    };
+}
+
+function mapItemToProductData(item) {
+    const listing = item?.offersV2?.listings?.[0] || null;
+    const parsedOffer = parseOfferListing(listing);
+
+    return {
+        asin: item?.asin || null,
+        title: item?.itemInfo?.title?.displayValue || item?.asin || null,
+        detailPageURL: item?.detailPageURL || null,
+        price: parsedOffer.price || 'Ver en Amazon',
+        originalPrice: parsedOffer.originalPrice,
+        discount: parsedOffer.discount,
+        priceNum: parsedOffer.priceNum,
+        originalPriceNum: parsedOffer.originalPriceNum,
+        savingsAmount: parsedOffer.savingsAmount,
+        isAmazonChoice: false,
+        isBuyBoxWinner: parsedOffer.isBuyBoxWinner,
+        availability: parsedOffer.availability,
+        dealDetails: parsedOffer.dealDetails,
+        merchantName: parsedOffer.merchantName,
+        imageUrl: item?.images?.primary?.large?.url || item?.images?.primary?.medium?.url || item?.images?.primary?.small?.url || null,
+        parentASIN: item?.parentASIN || null,
+        stars: null
+    };
+}
+
+async function getItemsBatch(asins) {
+    const payload = {
+        itemIds: asins,
+        itemIdType: 'ASIN',
+        marketplace: AMAZON_MARKETPLACE,
+        partnerTag: AMAZON_PARTNER_TAG,
+        languagesOfPreference: [AMAZON_LANG],
+        currencyOfPreference: AMAZON_CURRENCY,
+        condition: 'New',
+        resources: [
+            'images.primary.large',
+            'itemInfo.title',
+            'offersV2.listings.price',
+            'offersV2.listings.availability',
+            'offersV2.listings.dealDetails',
+            'offersV2.listings.isBuyBoxWinner',
+            'offersV2.listings.condition',
+            'parentASIN'
+        ]
+    };
+
+    return creatorsApiPost('/catalog/v1/getItems', payload);
+}
+
+async function searchItemsRequest(keyword) {
+    const payload = {
+        keywords: keyword,
+        itemCount: 3,
+        marketplace: AMAZON_MARKETPLACE,
+        partnerTag: AMAZON_PARTNER_TAG,
+        languagesOfPreference: [AMAZON_LANG],
+        currencyOfPreference: AMAZON_CURRENCY,
+        availability: 'Available',
+        condition: 'New',
+        sortBy: 'Relevance',
+        resources: [
+            'images.primary.medium',
+            'itemInfo.title',
+            'offersV2.listings.price',
+            'offersV2.listings.availability',
+            'offersV2.listings.dealDetails',
+            'offersV2.listings.isBuyBoxWinner'
+        ]
+    };
+
+    return creatorsApiPost('/catalog/v1/searchItems', payload);
+}
 
 const ROOT_DIR = path.join(__dirname, '..');
 
 /**
- * Fetch data from Amazon Creators API (PAAPI 5.0 compatible)
+ * Fetch product data from Amazon Creators API
  * @param {string} asin 
  * @returns {Promise<object|null>} Object with price, original_price, star_rating
  */
 async function fetchProductData(asin) {
-    if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY || !AMAZON_PARTNER_TAG) {
-        console.log(`${colors.yellow}[SIMULATION] No Amazon Keys provided. Returning mock data for ${asin}.${colors.reset}`);
+    if (!hasCreatorsCredentials()) {
+        console.log(`${colors.yellow}[SIMULATION] No Amazon Creators credentials provided. Returning mock data for ${asin}.${colors.reset}`);
 
         // Mock data logic to show the user how discounts look
         let price = '29,99 €';
         let originalPrice = null;
         let discount = null;
-        let stars = '4,3';
         let priceNum = 29.99;
-        let isAmazonChoice = false;
         let mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Accesorio+Amazon`;
 
         // Cojines
@@ -44,16 +407,13 @@ async function fetchProductData(asin) {
             price = '33,99 €';
             originalPrice = '45,89 €';
             discount = '-26%';
-            stars = '4,5';
             priceNum = 33.99;
             mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Fortem`;
         } else if (asin === 'B077G7D73D') {
             price = '30,99 €';
             originalPrice = '37,99 €';
             discount = '-18%';
-            stars = '4,2';
             priceNum = 30.99;
-            isAmazonChoice = true;
             mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Cojin+Marnur`;
         } else if (asin === 'B01N5LH26Y') {
             price = '27,90 €';
@@ -89,17 +449,14 @@ async function fetchProductData(asin) {
         } else if (asin === 'B0CKPH347G') {
             price = '38,80 €';
             priceNum = 38.80;
-            stars = '4,6';
             mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Brazo+BONTEC+Gas`;
         } else if (asin === 'B091D2CKC7') {
             price = '29,99 €';
             priceNum = 29.99;
-            stars = '4,7';
             mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Brazo+Ergosolid`;
         } else if (asin === 'B01MR397OH') {
             price = '23,61 €';
             priceNum = 23.61;
-            stars = '4,6';
             mockImage = `https://placehold.co/300x300/f8fafc/334155?text=Soporte+BONTEC+Dual`;
         } else if (asin === 'B0859W3D8J') {
             price = '45,00 €';
@@ -112,140 +469,36 @@ async function fetchProductData(asin) {
         return {
             price: price,
             originalPrice: originalPrice,
-            stars: stars,
+            stars: null,
             discount: discount,
             priceNum: priceNum,
-            isAmazonChoice: isAmazonChoice,
+            isAmazonChoice: false,
+            isBuyBoxWinner: false,
             imageUrl: mockImage
         };
     }
 
-    return new Promise((resolve, reject) => {
-        const payload = JSON.stringify({
-            ItemIds: [asin],
-            Resources: [
-                "Images.Primary.Large",
-                "Offers.Listings.Price",
-                "Offers.Listings.SavingBasis",
-                "Offers.Listings.DeliveryInfo.IsPrimeEligible",
-                "Reviews.Summary" // Note: Creators API often requires specific access for reviews, but we request it anyway
-            ],
-            PartnerTag: AMAZON_PARTNER_TAG,
-            PartnerType: "Associates",
-            Marketplace: "www.amazon.es"
-        });
+    try {
+        const data = await getItemsBatch([asin]);
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+            console.error(`${colors.red}[API ERROR] for ${asin}: ${JSON.stringify(data.errors)}${colors.reset}`);
+        }
 
-        const options = {
-            host: AMAZON_HOST,
-            path: '/paapi5/getitems',
-            method: 'POST',
-            service: 'ProductAdvertisingAPI',
-            region: AMAZON_REGION,
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                'X-Amz-Target': 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.GetItems',
-                'Content-Encoding': 'amz-1.0'
-            },
-            body: payload
-        };
+        const items = data.itemResults && Array.isArray(data.itemResults.items)
+            ? data.itemResults.items
+            : [];
+        const item = items.find(entry => entry.asin === asin) || items[0];
 
-        // Sign the request with AWS Signature V4
-        aws4.sign(options, {
-            accessKeyId: AMAZON_ACCESS_KEY,
-            secretAccessKey: AMAZON_SECRET_KEY
-        });
+        if (!item) {
+            console.error(`${colors.red}[ERROR] Item not found in Creators API for ${asin}${colors.reset}`);
+            return null;
+        }
 
-        const req = https.request(options, (res) => {
-            const chunks = [];
-            res.on('data', (chunk) => chunks.push(chunk));
-            res.on('end', () => {
-                try {
-                    const body = Buffer.concat(chunks).toString();
-                    const data = JSON.parse(body);
-
-                    if (data.Errors) {
-                        console.error(`${colors.red}[API ERROR] for ${asin}: ${JSON.stringify(data.Errors)}${colors.reset}`);
-                        return resolve(null);
-                    }
-
-                    if (data.ItemsResult && data.ItemsResult.Items && data.ItemsResult.Items.length > 0) {
-                        const item = data.ItemsResult.Items[0];
-
-                        if (!item.Offers || !item.Offers.Listings || item.Offers.Listings.length === 0) {
-                            console.error(`${colors.yellow}[NO OFFERS] No available price for ${asin}${colors.reset}`);
-                            return resolve(null);
-                        }
-
-                        const listing = item.Offers.Listings[0];
-
-                        // Price
-                        const priceInfo = listing.Price;
-                        let priceStr = priceInfo ? priceInfo.DisplayAmount : null;
-                        const numPrice = priceInfo ? priceInfo.Amount : null;
-
-                        // Replace generic € location if returned by API like "33.99€"
-                        if (priceStr && !priceStr.includes('€')) priceStr += ' €';
-                        if (priceStr && priceStr.includes('.')) priceStr = priceStr.replace('.', ',');
-
-                        // Original Price (SavingBasis)
-                        let originalPriceStr = null;
-                        let numOriginal = null;
-                        if (listing.SavingBasis && listing.SavingBasis.Amount) {
-                            originalPriceStr = listing.SavingBasis.DisplayAmount;
-                            numOriginal = listing.SavingBasis.Amount;
-                            if (originalPriceStr && !originalPriceStr.includes('€')) originalPriceStr += ' €';
-                            if (originalPriceStr && originalPriceStr.includes('.')) originalPriceStr = originalPriceStr.replace('.', ',');
-                        }
-
-                        // Discount calculation
-                        let discount = null;
-                        if (numOriginal && numPrice && numOriginal > numPrice) {
-                            const diff = numOriginal - numPrice;
-                            const perc = Math.round((diff / numOriginal) * 100);
-                            discount = `-${perc}%`;
-                        }
-
-                        // Prime Eligibility
-                        let isPrime = false;
-                        if (listing.DeliveryInfo && listing.DeliveryInfo.IsPrimeEligible === true) {
-                            isPrime = true;
-                        }
-
-                        // Image
-                        let imageUrl = null;
-                        if (item.Images && item.Images.Primary && item.Images.Primary.Large) {
-                            imageUrl = item.Images.Primary.Large.URL;
-                        }
-
-                        // Defaulting stars as PAAPI sometimes restricts review summaries
-                        const starRating = "4,5";
-                        const isAmazonChoice = false;
-
-                        resolve({
-                            price: priceStr || "Ver Amazon",
-                            originalPrice: originalPriceStr,
-                            stars: starRating,
-                            discount: discount,
-                            priceNum: numPrice,
-                            isAmazonChoice: isAmazonChoice,
-                            isPrime: isPrime,
-                            imageUrl: imageUrl
-                        });
-                    } else {
-                        console.error(`${colors.red}[ERROR] Item not found in PAAPI for ${asin}${colors.reset}`);
-                        resolve(null);
-                    }
-                } catch (e) {
-                    console.error(`${colors.red}Parse error: ${e.message}${colors.reset}`);
-                    resolve(null);
-                }
-            });
-        });
-
-        req.on('error', (e) => reject(e));
-        req.write(payload);
-        req.end();
-    });
+        return mapItemToProductData(item);
+    } catch (e) {
+        console.error(`${colors.red}[API ERROR] Failed to fetch ${asin}: ${e.message}${colors.reset}`);
+        return null;
+    }
 }
 
 /**
@@ -254,8 +507,8 @@ async function fetchProductData(asin) {
  * @returns {Promise<Array>|null} Array of product objects
  */
 async function searchRelatedProducts(keyword) {
-    if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY) {
-        console.log(`${colors.yellow}[SIMULATION] No Amazon Keys provided. Returning mock search for '${keyword}'.${colors.reset}`);
+    if (!hasCreatorsCredentials()) {
+        console.log(`${colors.yellow}[SIMULATION] No Amazon Creators credentials provided. Returning mock search for '${keyword}'.${colors.reset}`);
 
         let kw = keyword.toLowerCase();
         let mockData = [];
@@ -290,93 +543,34 @@ async function searchRelatedProducts(keyword) {
         return mockData;
     }
 
-    return new Promise((resolve, reject) => {
-        const payload = JSON.stringify({
-            Keywords: keyword,
-            Resources: [
-                "ItemInfo.Title",
-                "Images.Primary.Large",
-                "Offers.Listings.Price"
-            ],
-            ItemCount: 3,
-            PartnerTag: AMAZON_PARTNER_TAG,
-            PartnerType: "Associates",
-            Marketplace: "www.amazon.es"
-        });
+    try {
+        const data = await searchItemsRequest(keyword);
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+            console.error(`${colors.red}[API ERROR] for search '${keyword}': ${JSON.stringify(data.errors)}${colors.reset}`);
+        }
 
-        const options = {
-            host: AMAZON_HOST,
-            path: '/paapi5/searchitems',
-            method: 'POST',
-            service: 'ProductAdvertisingAPI',
-            region: AMAZON_REGION,
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                'X-Amz-Target': 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems',
-                'Content-Encoding': 'amz-1.0'
-            },
-            body: payload
-        };
-
-        aws4.sign(options, {
-            accessKeyId: AMAZON_ACCESS_KEY,
-            secretAccessKey: AMAZON_SECRET_KEY
-        });
-
-        const req = https.request(options, (res) => {
-            const chunks = [];
-            res.on('data', (chunk) => chunks.push(chunk));
-            res.on('end', () => {
-                try {
-                    const body = Buffer.concat(chunks).toString();
-                    const data = JSON.parse(body);
-
-                    if (data.Errors) {
-                        console.error(`${colors.red}[API ERROR] for search '${keyword}': ${JSON.stringify(data.Errors)}${colors.reset}`);
-                        return resolve(null);
-                    }
-
-                    if (data.SearchResult && data.SearchResult.Items && data.SearchResult.Items.length > 0) {
-                        const results = data.SearchResult.Items.map(item => {
-                            let priceStr = "Ver en Amazon";
-                            if (item.Offers && item.Offers.Listings && item.Offers.Listings.length > 0) {
-                                const priceInfo = item.Offers.Listings[0].Price;
-                                if (priceInfo && priceInfo.DisplayAmount) {
-                                    priceStr = priceInfo.DisplayAmount;
-                                    if (!priceStr.includes('€')) priceStr += ' €';
-                                    if (priceStr.includes('.')) priceStr = priceStr.replace('.', ',');
-                                }
-                            }
-
-                            let imageUrl = "";
-                            if (item.Images && item.Images.Primary && item.Images.Primary.Large) {
-                                imageUrl = item.Images.Primary.Large.URL;
-                            }
-
-                            return {
-                                asin: item.ASIN,
-                                title: item.ItemInfo && item.ItemInfo.Title ? item.ItemInfo.Title.DisplayValue : item.ASIN,
-                                url: item.DetailPageURL,
-                                image: imageUrl,
-                                price: priceStr
-                            };
-                        });
-                        resolve(results);
-                    } else {
-                        console.error(`${colors.yellow}[NO RESULTS] No items found for '${keyword}'${colors.reset}`);
-                        resolve(null);
-                    }
-                } catch (e) {
-                    console.error(`${colors.red}Search parse error: ${e.message}${colors.reset}`);
-                    resolve(null);
-                }
+        if (data.searchResult && Array.isArray(data.searchResult.items) && data.searchResult.items.length > 0) {
+            return data.searchResult.items.map(item => {
+                const parsed = mapItemToProductData(item);
+                return {
+                    asin: parsed.asin,
+                    title: parsed.title,
+                    url: parsed.detailPageURL || data.searchResult.searchURL,
+                    image: parsed.imageUrl,
+                    price: parsed.price || 'Ver en Amazon',
+                    discount: parsed.discount,
+                    isBuyBoxWinner: parsed.isBuyBoxWinner,
+                    availability: parsed.availability
+                };
             });
-        });
+        }
 
-        req.on('error', (e) => reject(e));
-        req.write(payload);
-        req.end();
-    });
+        console.error(`${colors.yellow}[NO RESULTS] No items found for '${keyword}'${colors.reset}`);
+        return null;
+    } catch (e) {
+        console.error(`${colors.red}Search parse error: ${e.message}${colors.reset}`);
+        return null;
+    }
 }
 
 /**
@@ -402,10 +596,31 @@ function findHtmlFiles(dir, fileList = []) {
  * Main execution
  */
 async function main() {
-    console.log(`${colors.blue}Starting price update...${colors.reset}`);
+    const cliArgs = parseCliArgs(process.argv.slice(2));
+    const configValidation = validateCreatorsConfiguration();
 
-    if (!AMAZON_ACCESS_KEY || !AMAZON_SECRET_KEY || !AMAZON_PARTNER_TAG) {
-        console.warn(`${colors.yellow}WARNING: Amazon PAAPI keys not found. Running in simulation mode.${colors.reset}`);
+    console.log(`${colors.blue}Starting price update...${colors.reset}`);
+    console.log(`${colors.blue}Creators config:${colors.reset} ${JSON.stringify(getCreatorsConfigSummary())}`);
+
+    for (const warning of configValidation.warnings) {
+        console.warn(`${colors.yellow}CONFIG WARNING: ${warning}${colors.reset}`);
+    }
+
+    if (configValidation.issues.length > 0) {
+        for (const issue of configValidation.issues) {
+            console.error(`${colors.red}CONFIG ERROR: ${issue}${colors.reset}`);
+        }
+        process.exitCode = 1;
+        return;
+    }
+
+    if (!hasCreatorsCredentials()) {
+        console.warn(`${colors.yellow}WARNING: Amazon Creators credentials not found. Running in simulation mode.${colors.reset}`);
+        if (cliArgs.strict) {
+            console.error(`${colors.red}Strict mode enabled and credentials are missing.${colors.reset}`);
+            process.exitCode = 1;
+            return;
+        }
     }
 
     const htmlFiles = findHtmlFiles(ROOT_DIR);
@@ -436,18 +651,92 @@ async function main() {
 
     // 2. Fetch Data
     const productDataMap = {};
-    for (const asin of asinsToFetch) {
-        console.log(`Checking data for ${asin}...`);
-        try {
-            const newProductData = await fetchProductData(asin);
-            if (newProductData) {
-                productDataMap[asin] = newProductData;
-                console.log(`${colors.green}  -> Price: ${newProductData.price}, Original: ${newProductData.originalPrice}, Stars: ${newProductData.stars}, Discount: ${newProductData.discount}${colors.reset}`);
+    const allAsins = Array.from(asinsToFetch);
+    const batchSize = hasCreatorsCredentials() ? 10 : 1;
+    const summary = {
+        requestedAsins: allAsins.length,
+        fetchedAsins: 0,
+        missingAsins: 0,
+        searchKeywords: keywordsToSearch.size,
+        searchHits: 0,
+        batchFailures: 0,
+        fileUpdates: 0
+    };
+
+    for (let i = 0; i < allAsins.length; i += batchSize) {
+        const batch = allAsins.slice(i, i + batchSize);
+        console.log(`Checking data for ${batch.join(', ')}...`);
+
+        if (!hasCreatorsCredentials()) {
+            for (const asin of batch) {
+                try {
+                    const newProductData = await fetchProductData(asin);
+                    if (newProductData) {
+                        productDataMap[asin] = newProductData;
+                        summary.fetchedAsins++;
+                        console.log(`${colors.green}  -> Price: ${newProductData.price}, Original: ${newProductData.originalPrice}, Discount: ${newProductData.discount}${colors.reset}`);
+                    } else {
+                        summary.missingAsins++;
+                    }
+                } catch (e) {
+                    summary.batchFailures++;
+                    console.error(`${colors.red}Failed to fetch ${asin}: ${e.message}${colors.reset}`);
+                }
             }
-            // Artificial delay to respect rate limits
-            if (AMAZON_ACCESS_KEY) await new Promise(r => setTimeout(r, 1000));
+            continue;
+        }
+
+        try {
+            const data = await getItemsBatch(batch);
+
+            if (Array.isArray(data.errors) && data.errors.length > 0) {
+                console.error(`${colors.yellow}[PARTIAL ERRORS] ${JSON.stringify(data.errors)}${colors.reset}`);
+            }
+
+            const items = data.itemResults && Array.isArray(data.itemResults.items)
+                ? data.itemResults.items
+                : [];
+            const batchAsinsFound = new Set();
+            for (const item of items) {
+                const mapped = mapItemToProductData(item);
+                if (mapped.asin) {
+                    productDataMap[mapped.asin] = mapped;
+                    batchAsinsFound.add(mapped.asin);
+                    summary.fetchedAsins++;
+                    console.log(`${colors.green}  -> ${mapped.asin}: ${mapped.price}, Original: ${mapped.originalPrice}, Discount: ${mapped.discount}${colors.reset}`);
+                }
+            }
+
+            for (const asin of batch) {
+                if (!batchAsinsFound.has(asin)) {
+                    summary.missingAsins++;
+                    console.warn(`${colors.yellow}[MISSING ITEM] No item payload returned for ${asin}${colors.reset}`);
+                }
+            }
+
+            await delay(500);
         } catch (e) {
-            console.error(`${colors.red}Failed to fetch ${asin}: ${e.message}${colors.reset}`);
+            summary.batchFailures++;
+            console.error(`${colors.red}Failed to fetch batch ${batch.join(', ')}: ${e.message}${colors.reset}`);
+            console.warn(`${colors.yellow}Falling back to single-item fetch for batch recovery.${colors.reset}`);
+
+            for (const asin of batch) {
+                try {
+                    const single = await fetchProductData(asin);
+                    if (single) {
+                        productDataMap[asin] = single;
+                        summary.fetchedAsins++;
+                        console.log(`${colors.green}  -> recovered ${asin}: ${single.price}${colors.reset}`);
+                    } else {
+                        summary.missingAsins++;
+                    }
+                    await delay(250);
+                } catch (singleError) {
+                    summary.batchFailures++;
+                    summary.missingAsins++;
+                    console.error(`${colors.red}Failed recovery fetch ${asin}: ${singleError.message}${colors.reset}`);
+                }
+            }
         }
     }
 
@@ -460,10 +749,12 @@ async function main() {
                 const results = await searchRelatedProducts(keyword);
                 if (results && results.length > 0) {
                     searchDataMap[keyword] = results;
+                    summary.searchHits += results.length;
                     console.log(`${colors.green}  -> Found ${results.length} related products.${colors.reset}`);
                 }
-                if (AMAZON_ACCESS_KEY) await new Promise(r => setTimeout(r, 1000));
+                if (hasCreatorsCredentials()) await delay(500);
             } catch (e) {
+                summary.batchFailures++;
                 console.error(`${colors.red}Failed to search ${keyword}: ${e.message}${colors.reset}`);
             }
         }
@@ -569,7 +860,21 @@ async function main() {
             return fullMatch;
         });
 
-        // Update stars
+        // Remove stale ratings when we do not have verified review data
+        const regexStarBlock = /(<div[^>]*class=["'][^"']*product-rank-stars[^"']*["'][^>]*>)([\s\S]*?data-asin-star=["']([^"']+)["'][\s\S]*?)(<\/div>)/g;
+        newContent = newContent.replace(regexStarBlock, (fullMatch, openTag, innerContent, asin, closeTag) => {
+            const data = productDataMap[asin];
+            if (data && data.stars) {
+                return fullMatch;
+            }
+            if (innerContent.trim() !== '') {
+                fileChanged = true;
+                return openTag + closeTag;
+            }
+            return fullMatch;
+        });
+
+        // Update star text only when verified review data exists
         newContent = newContent.replace(regexStar, (fullMatch, openTag, asin, oldText, closeTag) => {
             const data = productDataMap[asin];
             if (data && data.stars && oldText.trim() !== data.stars) {
@@ -648,14 +953,14 @@ async function main() {
         const regexPrime = /(<div[^>]+data-asin-prime=["']([^"']+)["'][^>]*>)([\s\S]*?)(<\/div>)/g;
         newContent = newContent.replace(regexPrime, (fullMatch, openTag, asin, oldText, closeTag) => {
             const data = productDataMap[asin];
-            if (data && data.isPrime) {
+            if (data && data.isPrime === true) {
                 // Prime SVG Icon (simplified official look)
                 const primeSvg = `<svg class="prime-icon" viewBox="0 0 100 30" width="60" height="18" xmlns="http://www.w3.org/2000/svg"><path fill="#00A8E1" d="M12.7 20.4l3.1-4c1-1.3 2.1-1.9 3.6-1.9 1 0 1.9.3 2.6 1L31 24.3l8.6-18.7c.3-.6.6-.9 1.1-.9h4.3c-.6 1.4-1.3 2.8-2 4.1L30.9 29.5c-.3.6-.8 1-1.4 1h-2c-.6 0-1-.3-1.4-.9l-7.2-7.5-3.3 4.2c-.4.5-.9.8-1.5.8h-4.3c.4-.6.9-1.2 1.3-1.7V25c0 1.4-.2 2.7-.6 4-3.7-.8-6.9-2.5-9.3-5L12 23.4l.7-3zM83.4 12c-4.6 0-8.6 3.1-9.7 7.5h-10c.8-5.7 5.7-9.8 11.6-9.8 4 0 7.5 2 9.4 5.2.3.5.3 1 0 1.5l-2.1 3.2c-.3.4-.8.5-1.2.3-1.4-.8-3-1.2-4.7-1.2-3.1 0-5.8 2-6.7 4.9h8.2c0-3.3 2.5-6.2 5.9-6.6.6-.1 1.1.2 1.3.8l1.3 3.6c.1.4 0 .9-.4 1.1L95.5 30h-4l-6.1-10.7c-.5.1-.9.2-1.4.2-4 0-7.8-2.6-9-6.5h-4.6v17h-4V10.1h4v4h7.9c1.4-3.5 5.1-6.2 9.3-6.2 4.3 0 8 2.2 9.9 5.6.3.5.2 1.1-.1 1.5l-2.2 3.2c-.3.4-.8.5-1.2.3-1.5-.9-3.2-1.3-4.9-1.3-3.2 0-6.1 2-7.1 5h8.5c-.1-3.3 2.5-6.1 5.8-6.6.6-.1 1.2.2 1.3.8l1.3 3.5c.2.4 0 .9-.4 1.1l-11.2 5V21h4.6c1.3 3.8 5 6.4 9 6.4 2.8 0 5.4-1.2 7-3.1v2.7h4v-17h-4v3.1c-1.6-1.9-4.2-3.1-7-3.1zM34.7 10.1h4v17h-4v-17zM45.5 10.1h4v2h2.9v4H49.5v11h-4v-17z"/></svg>`;
                 if (oldText.trim() !== primeSvg) {
                     fileChanged = true;
                     return openTag + "\n" + primeSvg + "\n" + closeTag;
                 }
-            } else {
+            } else if (data && data.isPrime === false) {
                 if (oldText.trim() !== "") {
                     fileChanged = true;
                     return openTag + "" + closeTag;
@@ -686,13 +991,17 @@ async function main() {
             if (data && data.length > 0) {
                 let gridHtml = `\n<div class="related-products-grid">\n`;
                 for (const item of data) {
+                    const safeTitle = escapeHtml(item.title || 'Producto relacionado');
+                    const safeImage = escapeHtml(item.image || '');
+                    const safePrice = escapeHtml(item.price || 'Ver en Amazon');
+                    const safeUrl = escapeHtml(item.url || '#');
                     gridHtml += `
   <div class="related-card">
-    <div class="related-img"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>
+    <div class="related-img"><img src="${safeImage}" alt="${safeTitle}" loading="lazy"></div>
     <div class="related-info">
-      <h4 class="related-title">${item.title}</h4>
-      <div class="related-price">${item.price}</div>
-      <a href="${item.url}" target="_blank" rel="nofollow sponsored noopener" class="related-cta">Ver en Amazon</a>
+      <h4 class="related-title">${safeTitle}</h4>
+      <div class="related-price">${safePrice}</div>
+      <a href="${safeUrl}" target="_blank" rel="nofollow sponsored noopener" class="related-cta">Ver en Amazon</a>
     </div>
   </div>\n`;
                 }
@@ -707,13 +1016,23 @@ async function main() {
         });
 
         if (fileChanged) {
-            console.log(`${colors.blue}Updating ${path.basename(file)}${colors.reset}`);
-            fs.writeFileSync(file, newContent, 'utf8');
+            const relativeFile = path.relative(ROOT_DIR, file);
+            if (!cliArgs.dryRun) {
+                console.log(`${colors.blue}Updating ${relativeFile}${colors.reset}`);
+                fs.writeFileSync(file, newContent, 'utf8');
+            } else {
+                console.log(`${colors.blue}[DRY RUN] Would update ${relativeFile}${colors.reset}`);
+            }
             updatedFilesCount++;
         }
     }
 
+    summary.fileUpdates = updatedFilesCount;
     console.log(`${colors.green}Finished! Updated ${updatedFilesCount} files.${colors.reset}`);
+    console.log(`${colors.blue}Run summary:${colors.reset} ${JSON.stringify(summary)}`);
 }
 
-main().catch(console.error);
+main().catch((error) => {
+    console.error(`${colors.red}Fatal error: ${error.message}${colors.reset}`);
+    process.exitCode = 1;
+});

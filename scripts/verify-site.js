@@ -142,7 +142,7 @@ async function verifySite() {
 
     if (totalBrokenImages === 0 && totalMissingPrices === 0 && totalBrokenLinks === 0) {
         console.log('✅ ALL PASSED: Images and prices look well-formed in the HTML.');
-        console.log('Note: To ensure real Amazon PAAPI prices/images match, ensure your AMAZON_ACCESS_KEY exists in production environment.');
+        console.log('Note: To ensure real Amazon Creators API prices/images match, ensure your AMAZON_CREATOR_CLIENT_ID, AMAZON_CREATOR_CLIENT_SECRET y AMAZON_PARTNER_TAG existen en el entorno.');
     } else {
         console.log('❌ SOME TESTS FAILED. Please review the errors above.');
     }
