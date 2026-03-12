@@ -85,6 +85,36 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+function collectGalleryImages(images) {
+    const primaryCandidates = [
+        images?.primary?.large?.url,
+        images?.primary?.medium?.url,
+        images?.primary?.small?.url
+    ];
+
+    const variants = Array.isArray(images?.variants) ? images.variants : [];
+    const variantCandidates = variants.flatMap((variant) => [
+        variant?.large?.url,
+        variant?.medium?.url,
+        variant?.small?.url
+    ]);
+
+    return [...primaryCandidates, ...variantCandidates]
+        .filter(Boolean)
+        .filter((value, index, collection) => collection.indexOf(value) === index);
+}
+
+function upsertAttribute(tag, name, value) {
+    const serializedValue = escapeHtml(value);
+    const attributeRegex = new RegExp(`${name}=["'][^"']*["']`);
+
+    if (attributeRegex.test(tag)) {
+        return tag.replace(attributeRegex, `${name}="${serializedValue}"`);
+    }
+
+    return tag.replace('<img', `<img ${name}="${serializedValue}"`);
+}
+
 function hasCreatorsCredentials() {
     return Boolean(
         AMAZON_CREATOR_CLIENT_ID &&
@@ -314,6 +344,7 @@ function parseOfferListing(listing) {
 function mapItemToProductData(item) {
     const listing = item?.offersV2?.listings?.[0] || null;
     const parsedOffer = parseOfferListing(listing);
+    const galleryImages = collectGalleryImages(item?.images);
 
     return {
         asin: item?.asin || null,
@@ -330,7 +361,8 @@ function mapItemToProductData(item) {
         availability: parsedOffer.availability,
         dealDetails: parsedOffer.dealDetails,
         merchantName: parsedOffer.merchantName,
-        imageUrl: item?.images?.primary?.large?.url || item?.images?.primary?.medium?.url || item?.images?.primary?.small?.url || null,
+        imageUrl: galleryImages[0] || null,
+        galleryImages,
         parentASIN: item?.parentASIN || null,
         stars: null
     };
@@ -347,6 +379,9 @@ async function getItemsBatch(asins) {
         condition: 'New',
         resources: [
             'images.primary.large',
+            'images.primary.medium',
+            'images.variants.large',
+            'images.variants.medium',
             'itemInfo.title',
             'offersV2.listings.price',
             'offersV2.listings.availability',
@@ -1033,11 +1068,23 @@ async function main() {
         newContent = newContent.replace(regexImgTag, (fullMatch, fullTag, asin) => {
             const data = productDataMap[asin];
             if (data && data.imageUrl) {
+                let updatedTag = fullTag;
                 const srcMatch = fullTag.match(/src=["']([^"']+)["']/);
                 if (srcMatch && srcMatch[1] !== data.imageUrl) {
                     fileChanged = true;
-                    return fullTag.replace(srcMatch[0], `src="${data.imageUrl}"`);
+                    updatedTag = updatedTag.replace(srcMatch[0], `src="${data.imageUrl}"`);
                 }
+
+                if (Array.isArray(data.galleryImages) && data.galleryImages.length > 1) {
+                    const serializedGallery = data.galleryImages.join('|');
+                    const galleryMatch = updatedTag.match(/data-gallery-images=["']([^"']*)["']/);
+                    if (!galleryMatch || galleryMatch[1] !== serializedGallery) {
+                        fileChanged = true;
+                        updatedTag = upsertAttribute(updatedTag, 'data-gallery-images', serializedGallery);
+                    }
+                }
+
+                return updatedTag;
             }
             return fullMatch;
         });
