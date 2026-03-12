@@ -360,10 +360,10 @@ async function getItemsBatch(asins) {
     return creatorsApiPost('/catalog/v1/getItems', payload);
 }
 
-async function searchItemsRequest(keyword) {
+async function searchItemsRequest(keyword, itemCount = 3) {
     const payload = {
         keywords: keyword,
-        itemCount: 3,
+        itemCount,
         marketplace: AMAZON_MARKETPLACE,
         partnerTag: AMAZON_PARTNER_TAG,
         languagesOfPreference: [AMAZON_LANG],
@@ -506,67 +506,121 @@ async function fetchProductData(asin) {
  * @param {string} keyword 
  * @returns {Promise<Array>|null} Array of product objects
  */
-async function searchRelatedProducts(keyword) {
+function parseSearchQueries(rawKeyword) {
+    return Array.from(new Set(
+        String(rawKeyword || '')
+            .split(/[|,]/)
+            .map((item) => item.trim())
+            .filter(Boolean)
+    ));
+}
+
+function getMockSearchResults(keyword) {
+    const kw = keyword.toLowerCase();
+
+    if (kw.includes('escritorio') || kw.includes('standing') || kw.includes('desk')) {
+        return [
+            { asin: 'mock-desk-1', title: 'Escritorio Elevable Electrico Altura Ajustable', url: 'https://www.amazon.es/s?k=escritorio+elevable+electrico&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+1', price: '169,99 EUR' },
+            { asin: 'mock-desk-2', title: 'Mesa de Escritorio Elevable con Memoria', url: 'https://www.amazon.es/s?k=mesa+escritorio+elevable&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+2', price: '219,50 EUR' },
+            { asin: 'mock-desk-3', title: 'Escritorio de Pie Motorizado Marco de Acero', url: 'https://www.amazon.es/s?k=standing+desk&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+3', price: '189,00 EUR' }
+        ];
+    }
+
+    if (kw.includes('silla') || kw.includes('chair') || kw.includes('taburete')) {
+        return [
+            { asin: 'mock-chair-1', title: 'Silla de Oficina Ergonomica Transpirable', url: 'https://www.amazon.es/s?k=silla+oficina+ergonomica&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+1', price: '145,99 EUR' },
+            { asin: 'mock-chair-2', title: 'Silla Escritorio Ergonomica con Respaldo Lumbar', url: 'https://www.amazon.es/s?k=silla+escritorio+respaldo+lumbar&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+2', price: '129,50 EUR' },
+            { asin: 'mock-chair-3', title: 'Silla Operativa Malla Ajustable 3D', url: 'https://www.amazon.es/s?k=silla+operativa+malla&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+3', price: '189,90 EUR' }
+        ];
+    }
+
+    if (kw.includes('monitor') || kw.includes('brazo') || kw.includes('soporte')) {
+        return [
+            { asin: 'mock-arm-1', title: 'Brazo de Monitor Individual Articulado de Gas', url: 'https://www.amazon.es/s?k=brazo+monitor+articulado&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+1', price: '45,99 EUR' },
+            { asin: 'mock-arm-2', title: 'Soporte Monitor Doble Brazo Doble VESA', url: 'https://www.amazon.es/s?k=soporte+monitor+doble&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+2', price: '59,99 EUR' },
+            { asin: 'mock-arm-3', title: 'Brazo para Monitor Ajustable Rotacion 360', url: 'https://www.amazon.es/s?k=brazo+monitor+ajustable&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+3', price: '34,50 EUR' }
+        ];
+    }
+
+    return [
+        { asin: 'mock-acc-1', title: 'Reposapies Ergonomico de Oficina con Espuma', url: 'https://www.amazon.es/s?k=reposapies+ergonomico&tag=descansointel-21', image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp', price: '21,99 EUR' },
+        { asin: 'mock-acc-2', title: 'Soporte Lumbar Ergonomico para Silla', url: 'https://www.amazon.es/s?k=soporte+lumbar+silla&tag=descansointel-21', image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp', price: '28,99 EUR' },
+        { asin: 'mock-acc-3', title: 'Soporte de Monitor Ajustable', url: 'https://www.amazon.es/s?k=soporte+elevador+monitor&tag=descansointel-21', image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp', price: '19,50 EUR' }
+    ];
+}
+
+function mergeUniqueProducts(existingItems, incomingItems, limit) {
+    const merged = [...existingItems];
+    const seen = new Set(merged.map((item) => item.asin || item.url || item.title));
+
+    for (const item of incomingItems || []) {
+        const uniqueKey = item.asin || item.url || item.title;
+        if (!uniqueKey || seen.has(uniqueKey)) continue;
+        merged.push(item);
+        seen.add(uniqueKey);
+        if (merged.length >= limit) break;
+    }
+
+    return merged;
+}
+
+async function searchRelatedProducts(keyword, itemCount = 3) {
+    const queries = parseSearchQueries(keyword);
+    const perQueryCount = Math.max(3, Math.ceil(itemCount / Math.max(queries.length, 1)) + 1);
+
+    if (queries.length === 0) {
+        return null;
+    }
+
     if (!hasCreatorsCredentials()) {
         console.log(`${colors.yellow}[SIMULATION] No Amazon Creators credentials provided. Returning mock search for '${keyword}'.${colors.reset}`);
 
-        let kw = keyword.toLowerCase();
-        let mockData = [];
-
-        if (kw.includes('escritorio')) {
-            mockData = [
-                { asin: 'mock-desk-1', title: 'Escritorio Elevable Eléctrico Altura Ajustable', url: 'https://www.amazon.es/s?k=escritorio+elevable+electrico&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+1', price: '169,99 €' },
-                { asin: 'mock-desk-2', title: 'Mesa de Escritorio Elevable con Memoria', url: 'https://www.amazon.es/s?k=mesa+escritorio+elevable&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+2', price: '219,50 €' },
-                { asin: 'mock-desk-3', title: 'Escritorio de Pie Motorizado Marco de Acero', url: 'https://www.amazon.es/s?k=standing+desk&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Escritorio+Elevable+3', price: '189,00 €' }
-            ];
-        } else if (kw.includes('silla')) {
-            mockData = [
-                { asin: 'mock-chair-1', title: 'Silla de Oficina Ergonómica Transpirable', url: 'https://www.amazon.es/s?k=silla+oficina+ergonomica&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+1', price: '145,99 €' },
-                { asin: 'mock-chair-2', title: 'Silla Escritorio Ergonómica con Respaldo Lumbar', url: 'https://www.amazon.es/s?k=silla+escritorio+respaldo+lumbar&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+2', price: '129,50 €' },
-                { asin: 'mock-chair-3', title: 'Silla Operativa Malla Ajustable 3D', url: 'https://www.amazon.es/s?k=silla+operativa+malla&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Silla+Ergonomica+3', price: '189,90 €' }
-            ];
-        } else if (kw.includes('monitor') || kw.includes('brazo')) {
-            mockData = [
-                { asin: 'mock-arm-1', title: 'Brazo de Monitor Individual Articulado de Gas', url: 'https://www.amazon.es/s?k=brazo+monitor+articulado&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+1', price: '45,99 €' },
-                { asin: 'mock-arm-2', title: 'Soporte Monitor Doble Brazo Doble VESA', url: 'https://www.amazon.es/s?k=soporte+monitor+doble&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+2', price: '59,99 €' },
-                { asin: 'mock-arm-3', title: 'Brazo para Monitor Ajustable Rotación 360°', url: 'https://www.amazon.es/s?k=brazo+monitor+ajustable&tag=descansointel-21', image: 'https://placehold.co/300x300/f8fafc/334155?text=Brazo+Monitor+3', price: '34,50 €' }
-            ];
-        } else {
-            // Default mock (cojines y accesorios genéricos)
-            mockData = [
-                { asin: 'mock-acc-1', title: 'Reposapiés Ergonómico de Oficina con Espuma', url: 'https://www.amazon.es/s?k=reposapies+ergonomico&tag=descansointel-21', image: '../assets/img/products/cojin-silla-oficina-fortem-premium.webp', price: '21,99 €' },
-                { asin: 'mock-acc-2', title: 'Soporte Lumbar Ergonómico para Silla', url: 'https://www.amazon.es/s?k=soporte+lumbar+silla&tag=descansointel-21', image: '../assets/img/products/travel-ease-set-cojin-almohada-lumbar.webp', price: '28,99 €' },
-                { asin: 'mock-acc-3', title: 'Soporte de Monitor Ajustable', url: 'https://www.amazon.es/s?k=soporte+elevador+monitor&tag=descansointel-21', image: '../assets/img/products/cojin-premium-viscoelastica-gel-refrescante.webp', price: '19,50 €' }
-            ];
+        let mergedMockData = [];
+        for (const query of queries) {
+            mergedMockData = mergeUniqueProducts(mergedMockData, getMockSearchResults(query), itemCount);
         }
 
-        return mockData;
+        while (mergedMockData.length < itemCount && mergedMockData.length > 0) {
+            mergedMockData = mergedMockData.concat(mergedMockData.slice(0, itemCount - mergedMockData.length));
+        }
+
+        return mergedMockData.slice(0, itemCount);
     }
 
     try {
-        const data = await searchItemsRequest(keyword);
-        if (Array.isArray(data.errors) && data.errors.length > 0) {
-            console.error(`${colors.red}[API ERROR] for search '${keyword}': ${JSON.stringify(data.errors)}${colors.reset}`);
+        let mergedResults = [];
+
+        for (const query of queries) {
+            const data = await searchItemsRequest(query, perQueryCount);
+            if (Array.isArray(data.errors) && data.errors.length > 0) {
+                console.error(`${colors.red}[API ERROR] for search '${query}': ${JSON.stringify(data.errors)}${colors.reset}`);
+            }
+
+            if (data.searchResult && Array.isArray(data.searchResult.items) && data.searchResult.items.length > 0) {
+                const queryResults = data.searchResult.items.slice(0, perQueryCount).map(item => {
+                    const parsed = mapItemToProductData(item);
+                    return {
+                        asin: parsed.asin,
+                        title: parsed.title,
+                        url: parsed.detailPageURL || data.searchResult.searchURL,
+                        image: parsed.imageUrl,
+                        price: parsed.price || 'Ver en Amazon',
+                        discount: parsed.discount,
+                        isBuyBoxWinner: parsed.isBuyBoxWinner,
+                        availability: parsed.availability
+                    };
+                });
+
+                mergedResults = mergeUniqueProducts(mergedResults, queryResults, itemCount);
+            } else {
+                console.error(`${colors.yellow}[NO RESULTS] No items found for '${query}'${colors.reset}`);
+            }
+
+            if (mergedResults.length >= itemCount) break;
+            await delay(250);
         }
 
-        if (data.searchResult && Array.isArray(data.searchResult.items) && data.searchResult.items.length > 0) {
-            return data.searchResult.items.map(item => {
-                const parsed = mapItemToProductData(item);
-                return {
-                    asin: parsed.asin,
-                    title: parsed.title,
-                    url: parsed.detailPageURL || data.searchResult.searchURL,
-                    image: parsed.imageUrl,
-                    price: parsed.price || 'Ver en Amazon',
-                    discount: parsed.discount,
-                    isBuyBoxWinner: parsed.isBuyBoxWinner,
-                    availability: parsed.availability
-                };
-            });
-        }
-
-        console.error(`${colors.yellow}[NO RESULTS] No items found for '${keyword}'${colors.reset}`);
-        return null;
+        return mergedResults.length > 0 ? mergedResults.slice(0, itemCount) : null;
     } catch (e) {
         console.error(`${colors.red}Search parse error: ${e.message}${colors.reset}`);
         return null;
@@ -625,12 +679,12 @@ async function main() {
 
     const htmlFiles = findHtmlFiles(ROOT_DIR);
     const asinsToFetch = new Set();
-    const keywordsToSearch = new Set();
+    const keywordsToSearch = new Map();
     const asinLocations = []; // Store where each ASIN is found {file, index, length, asin}
 
     // 1. Scan files for ASINs and Keywords to fetch
     const regexPriceInfo = /data-asin=["']([^"']+)["']/g;
-    const regexSearchKeywords = /data-search-keywords=["']([^"']+)["']/g;
+    const regexSearchKeywords = /<div[^>]+data-search-keywords=["']([^"']+)["'][^>]*>/g;
     const regexImageInfo = /data-asin-image=["']([^"']+)["']/g;
 
     for (const file of htmlFiles) {
@@ -640,7 +694,12 @@ async function main() {
             asinsToFetch.add(match[1]);
         }
         while ((match = regexSearchKeywords.exec(content)) !== null) {
-            keywordsToSearch.add(match[1]);
+            const keyword = match[1].trim();
+            const fullTag = match[0];
+            const countMatch = fullTag.match(/data-search-count=["'](\d+)["']/);
+            const itemCount = countMatch ? Math.max(1, parseInt(countMatch[1], 10)) : 3;
+            const previousCount = keywordsToSearch.get(keyword) || 0;
+            keywordsToSearch.set(keyword, Math.max(previousCount, itemCount));
         }
         while ((match = regexImageInfo.exec(content)) !== null) {
             asinsToFetch.add(match[1]);
@@ -743,10 +802,10 @@ async function main() {
     // 2.5 Search Related Products Data
     const searchDataMap = {};
     if (keywordsToSearch.size > 0) {
-        for (const keyword of keywordsToSearch) {
+        for (const [keyword, itemCount] of keywordsToSearch.entries()) {
             console.log(`Searching related products for '${keyword}'...`);
             try {
-                const results = await searchRelatedProducts(keyword);
+                const results = await searchRelatedProducts(keyword, itemCount);
                 if (results && results.length > 0) {
                     searchDataMap[keyword] = results;
                     summary.searchHits += results.length;
