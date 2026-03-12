@@ -1,4 +1,13 @@
 {
+  "scripts": {
+    "verify:site": "node scripts/verify-site.js",
+    "audit:affiliate": "node scripts/validate-affiliate-compliance.js",
+    "check:creators": "node scripts/check-creators-config.js",
+    "skill:list": "node scripts/skills-cli.js list",
+    "skill:show": "node scripts/skills-cli.js show",
+    "skill:prepublish": "node scripts/skills-cli.js prepublish",
+    "skill:compliance": "node scripts/skills-cli.js compliance"
+  },
   "dependencies": {
     "aws4": "^1.13.2"
   }
