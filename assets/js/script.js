@@ -198,9 +198,9 @@
         }
       }
 
-      if (clearButton && input) {
-        clearButton.addEventListener('click', () => {
-          input.value = '';
+    if (clearButton && input) {
+      clearButton.addEventListener('click', () => {
+        input.value = '';
           applySearch('');
           input.focus();
         });
@@ -218,6 +218,426 @@
       });
 
       applySearch(input ? input.value : '');
+    }
+
+    /* --- Footer privacy center --- */
+    const cookieStorageKey = 'descanso-inteligente-cookie-preferences';
+    const analyticsMeasurementId = 'G-B06YM5N4P8';
+    const cookieDefaults = {
+      necessary: true,
+      analytics: false,
+      marketing: false
+    };
+    let analyticsBooted = false;
+    let analyticsScriptPromise = null;
+
+    const safeParse = (value) => {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        return null;
+      }
+    };
+
+    const getCookiePreferences = () => {
+      const saved = safeParse(window.localStorage.getItem(cookieStorageKey));
+      return {
+        necessary: true,
+        analytics: Boolean(saved && saved.analytics),
+        marketing: Boolean(saved && saved.marketing)
+      };
+    };
+
+    const saveCookiePreferences = (preferences) => {
+      const payload = {
+        necessary: true,
+        analytics: Boolean(preferences.analytics),
+        marketing: Boolean(preferences.marketing),
+        updatedAt: new Date().toISOString()
+      };
+
+      window.localStorage.setItem(cookieStorageKey, JSON.stringify(payload));
+      document.documentElement.dataset.cookieAnalytics = String(payload.analytics);
+      document.documentElement.dataset.cookieMarketing = String(payload.marketing);
+      window.dispatchEvent(new CustomEvent('cookiePreferencesUpdated', { detail: payload }));
+      return payload;
+    };
+
+    const updateGoogleConsent = (preferences) => {
+      if (typeof window.gtag !== 'function') return;
+
+      window.gtag('consent', 'update', {
+        analytics_storage: preferences.analytics ? 'granted' : 'denied',
+        ad_storage: preferences.marketing ? 'granted' : 'denied',
+        ad_user_data: preferences.marketing ? 'granted' : 'denied',
+        ad_personalization: preferences.marketing ? 'granted' : 'denied'
+      });
+    };
+
+    const loadAnalyticsScript = () => {
+      if (analyticsScriptPromise) return analyticsScriptPromise;
+
+      analyticsScriptPromise = new Promise((resolve, reject) => {
+        const existingScript = document.querySelector(`script[data-analytics-id="${analyticsMeasurementId}"]`);
+        if (existingScript) {
+          if (existingScript.dataset.loaded === 'true') {
+            resolve();
+            return;
+          }
+
+          existingScript.addEventListener('load', () => resolve(), { once: true });
+          existingScript.addEventListener('error', reject, { once: true });
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${analyticsMeasurementId}`;
+        script.dataset.analyticsId = analyticsMeasurementId;
+        script.addEventListener('load', () => {
+          script.dataset.loaded = 'true';
+          resolve();
+        }, { once: true });
+        script.addEventListener('error', reject, { once: true });
+        document.head.appendChild(script);
+      });
+
+      return analyticsScriptPromise;
+    };
+
+    const bootAnalytics = async (preferences) => {
+      if (!preferences.analytics && !preferences.marketing) return;
+
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function gtag() {
+        window.dataLayer.push(arguments);
+      };
+
+      try {
+        await loadAnalyticsScript();
+      } catch (error) {
+        return;
+      }
+
+      if (!analyticsBooted) {
+        window.gtag('js', new Date());
+        window.gtag('consent', 'default', {
+          analytics_storage: 'denied',
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied'
+        });
+        window.gtag('config', analyticsMeasurementId, { send_page_view: false });
+        analyticsBooted = true;
+      }
+
+      updateGoogleConsent(preferences);
+
+      if (preferences.analytics) {
+        window.gtag('event', 'page_view', {
+          page_title: document.title,
+          page_location: window.location.href,
+          page_path: window.location.pathname + window.location.search
+        });
+      }
+    };
+
+    const initialCookiePreferences = getCookiePreferences();
+    document.documentElement.dataset.cookieAnalytics = String(initialCookiePreferences.analytics);
+    document.documentElement.dataset.cookieMarketing = String(initialCookiePreferences.marketing);
+    bootAnalytics(initialCookiePreferences);
+
+    const footerNodes = Array.from(document.querySelectorAll('.site-footer'));
+    if (footerNodes.length > 0) {
+      const locale = document.documentElement.lang || 'es';
+      const copy = {
+        en: {
+          policyLink: 'Cookie policy',
+          openSettings: 'Cookie settings',
+          affiliateNote: 'We may earn a commission from affiliate links to the products featured on this site.',
+          modalTitle: 'Privacy preferences center',
+          modalIntro: 'You can review which types of cookies you accept on Descanso Inteligente. Required cookies stay active so the site works correctly.',
+          necessaryTitle: 'Strictly necessary cookies',
+          necessaryBody: 'They enable basic site functionality, security, stability and the minimum storage needed for your preferences.',
+          necessaryStatus: 'Always active',
+          analyticsTitle: 'Analytics cookies',
+          analyticsBody: 'They help us understand which content performs best and where we can improve navigation without personally identifying you.',
+          marketingTitle: 'Advertising and affiliate cookies',
+          marketingBody: 'They help us measure affiliate links, limit repetition and show more relevant messages related to our content.',
+          analyticsLabel: 'Enable analytics cookies',
+          marketingLabel: 'Enable advertising and affiliate cookies',
+          reject: 'Reject optional cookies',
+          save: 'Save preferences',
+          feedbackRejected: 'Optional cookies have been rejected.',
+          feedbackSaved: 'Your preferences have been saved correctly.',
+          closeLabel: 'Close cookie preferences',
+          legalHeading: 'Information',
+          trademarksNotice: 'Amazon, Amazon Prime and their logos are trademarks of Amazon.com, Inc. or its affiliates.'
+        },
+        fr: {
+          policyLink: 'Politique de cookies',
+          openSettings: 'Parametres des cookies',
+          affiliateNote: 'Nous pouvons recevoir une commission via les liens d affiliation vers les produits presentes sur ce site.',
+          modalTitle: 'Centre des preferences de confidentialite',
+          modalIntro: 'Vous pouvez choisir les types de cookies acceptes sur Descanso Inteligente. Les cookies necessaires restent actifs pour garantir le bon fonctionnement du site.',
+          necessaryTitle: 'Cookies strictement necessaires',
+          necessaryBody: 'Ils permettent les fonctions de base du site, la securite, la stabilite et l enregistrement minimum de vos preferences.',
+          necessaryStatus: 'Toujours actifs',
+          analyticsTitle: 'Cookies d analyse',
+          analyticsBody: 'Ils nous aident a comprendre quels contenus fonctionnent le mieux et ou ameliorer la navigation sans vous identifier personnellement.',
+          marketingTitle: 'Cookies publicitaires et d affiliation',
+          marketingBody: 'Ils servent a mesurer les liens d affiliation, limiter les repetitions et afficher des messages plus pertinents lies a nos contenus.',
+          analyticsLabel: 'Activer les cookies d analyse',
+          marketingLabel: 'Activer les cookies publicitaires et d affiliation',
+          reject: 'Refuser les optionnels',
+          save: 'Enregistrer mes preferences',
+          feedbackRejected: 'Les cookies optionnels ont ete refuses.',
+          feedbackSaved: 'Vos preferences ont bien ete enregistrees.',
+          closeLabel: 'Fermer les preferences de cookies',
+          legalHeading: 'Informations',
+          trademarksNotice: 'Amazon, Amazon Prime et leurs logos sont des marques deposees d Amazon.com, Inc. ou de ses societes affiliees.'
+        },
+        it: {
+          policyLink: 'Politica cookie',
+          openSettings: 'Impostazioni cookie',
+          affiliateNote: 'Potremmo ricevere una commissione tramite i link di affiliazione ai prodotti presenti in questo sito.',
+          modalTitle: 'Centro preferenze privacy',
+          modalIntro: 'Puoi scegliere quali tipi di cookie accettare su Descanso Inteligente. I cookie necessari restano attivi per garantire il corretto funzionamento del sito.',
+          necessaryTitle: 'Cookie strettamente necessari',
+          necessaryBody: 'Consentono le funzioni di base del sito, la sicurezza, la stabilita e il salvataggio minimo delle tue preferenze.',
+          necessaryStatus: 'Sempre attivi',
+          analyticsTitle: 'Cookie analitici',
+          analyticsBody: 'Ci aiutano a capire quali contenuti funzionano meglio e dove migliorare la navigazione senza identificarti personalmente.',
+          marketingTitle: 'Cookie pubblicitari e di affiliazione',
+          marketingBody: 'Servono a misurare i link di affiliazione, limitare le ripetizioni e mostrare messaggi piu rilevanti legati ai nostri contenuti.',
+          analyticsLabel: 'Attivare i cookie analitici',
+          marketingLabel: 'Attivare i cookie pubblicitari e di affiliazione',
+          reject: 'Rifiuta opzionali',
+          save: 'Salva preferenze',
+          feedbackRejected: 'I cookie opzionali sono stati rifiutati.',
+          feedbackSaved: 'Le tue preferenze sono state salvate correttamente.',
+          closeLabel: 'Chiudi preferenze cookie',
+          legalHeading: 'Informazioni',
+          trademarksNotice: 'Amazon, Amazon Prime e i relativi loghi sono marchi registrati di Amazon.com, Inc. o delle sue affiliate.'
+        },
+        es: {
+          policyLink: 'Politica de cookies',
+          openSettings: 'Configuracion de cookies',
+          affiliateNote: 'Podemos ganar una compensacion por enlaces de afiliados para los productos listados en esta web.',
+          modalTitle: 'Centro de preferencias de privacidad',
+          modalIntro: 'Puedes revisar que tipos de cookies aceptas en Descanso Inteligente. Las cookies necesarias permanecen activas para que la web funcione correctamente.',
+          necessaryTitle: 'Cookies estrictamente necesarias',
+          necessaryBody: 'Permiten funciones basicas del sitio, estabilidad, seguridad y almacenamiento minimo de tus preferencias.',
+          necessaryStatus: 'Activas siempre',
+          analyticsTitle: 'Cookies de analitica',
+          analyticsBody: 'Nos ayudan a entender que contenidos funcionan mejor y a detectar mejoras de navegacion sin identificarte personalmente.',
+          marketingTitle: 'Cookies publicitarias y de afiliacion',
+          marketingBody: 'Sirven para medir enlaces de afiliados, limitar repeticiones y mostrar mensajes mas relevantes relacionados con nuestros contenidos.',
+          analyticsLabel: 'Activar cookies de analitica',
+          marketingLabel: 'Activar cookies publicitarias y de afiliacion',
+          reject: 'Rechazar opcionales',
+          save: 'Guardar preferencias',
+          feedbackRejected: 'Has rechazado las cookies opcionales.',
+          feedbackSaved: 'Tus preferencias se han guardado correctamente.',
+          closeLabel: 'Cerrar preferencias de cookies',
+          legalHeading: 'Informacion',
+          trademarksNotice: 'Amazon, Amazon Prime y sus logotipos son marcas registradas de Amazon.com, Inc. o sus afiliados.'
+        }
+      }[locale] || {
+        policyLink: 'Politica de cookies',
+        openSettings: 'Configuracion de cookies',
+        affiliateNote: 'Podemos ganar una compensacion por enlaces de afiliados para los productos listados en esta web.',
+        modalTitle: 'Centro de preferencias de privacidad',
+        modalIntro: 'Puedes revisar que tipos de cookies aceptas en Descanso Inteligente. Las cookies necesarias permanecen activas para que la web funcione correctamente.',
+        necessaryTitle: 'Cookies estrictamente necesarias',
+        necessaryBody: 'Permiten funciones basicas del sitio, estabilidad, seguridad y almacenamiento minimo de tus preferencias.',
+        necessaryStatus: 'Activas siempre',
+        analyticsTitle: 'Cookies de analitica',
+        analyticsBody: 'Nos ayudan a entender que contenidos funcionan mejor y a detectar mejoras de navegacion sin identificarte personalmente.',
+        marketingTitle: 'Cookies publicitarias y de afiliacion',
+        marketingBody: 'Sirven para medir enlaces de afiliados, limitar repeticiones y mostrar mensajes mas relevantes relacionados con nuestros contenidos.',
+        analyticsLabel: 'Activar cookies de analitica',
+        marketingLabel: 'Activar cookies publicitarias y de afiliacion',
+        reject: 'Rechazar opcionales',
+        save: 'Guardar preferencias',
+        feedbackRejected: 'Has rechazado las cookies opcionales.',
+        feedbackSaved: 'Tus preferencias se han guardado correctamente.',
+        closeLabel: 'Cerrar preferencias de cookies',
+        legalHeading: 'Informacion',
+        trademarksNotice: 'Amazon, Amazon Prime y sus logotipos son marcas registradas de Amazon.com, Inc. o sus afiliados.'
+      };
+
+      footerNodes.forEach((footer) => {
+        const columns = Array.from(footer.querySelectorAll('.footer-content > div'));
+        if (columns[1]) columns[1].classList.add('footer-column-info');
+        if (columns[2]) columns[2].classList.add('footer-column-legal');
+
+        const brand = footer.querySelector('.footer-brand');
+        if (brand && !brand.querySelector('.footer-affiliate-note')) {
+          const affiliateNote = document.createElement('p');
+          affiliateNote.className = 'footer-affiliate-note';
+          affiliateNote.textContent = copy.affiliateNote;
+          brand.appendChild(affiliateNote);
+        }
+
+        const legalHeading = footer.querySelector('.footer-column-legal .footer-heading');
+        if (legalHeading && legalHeading.textContent.trim().length < 14) {
+          legalHeading.textContent = copy.legalHeading;
+        }
+
+        const utilityContainer = document.createElement('div');
+        utilityContainer.className = 'footer-utility-links';
+        utilityContainer.innerHTML = `
+          <a href="/politica-cookies/">${copy.policyLink}</a>
+          <button type="button" class="footer-legal-trigger" data-cookie-open>${copy.openSettings}</button>
+        `;
+
+        const footerBottom = footer.querySelector('.footer-bottom');
+        if (footerBottom && !footerBottom.querySelector('[data-cookie-open]')) {
+          footerBottom.appendChild(utilityContainer);
+        }
+
+        if (footerBottom && !footerBottom.querySelector('.footer-meta-note')) {
+          const metaNote = document.createElement('p');
+          metaNote.className = 'footer-meta-note';
+          metaNote.textContent = copy.trademarksNotice;
+          footerBottom.appendChild(metaNote);
+        }
+      });
+
+      const modal = document.createElement('div');
+      modal.className = 'cookie-modal';
+      modal.setAttribute('aria-hidden', 'true');
+      modal.innerHTML = `
+        <div class="cookie-modal-backdrop" data-cookie-close></div>
+        <section class="cookie-modal-panel" role="dialog" aria-modal="true" aria-labelledby="cookie-modal-title">
+          <header class="cookie-modal-header">
+            <div>
+              <h2 id="cookie-modal-title" class="cookie-modal-title">${copy.modalTitle}</h2>
+              <p class="cookie-modal-intro">${copy.modalIntro}</p>
+            </div>
+            <button type="button" class="cookie-modal-close" aria-label="${copy.closeLabel}" data-cookie-close>&times;</button>
+          </header>
+          <div class="cookie-modal-body">
+            <article class="cookie-category">
+              <div class="cookie-category-head">
+                <div>
+                  <h3>${copy.necessaryTitle}</h3>
+                  <p>${copy.necessaryBody}</p>
+                </div>
+                <div>
+                  <div class="cookie-status">${copy.necessaryStatus}</div>
+                  <button type="button" class="cookie-toggle" aria-checked="true" disabled></button>
+                </div>
+              </div>
+            </article>
+            <article class="cookie-category">
+              <div class="cookie-category-head">
+                <div>
+                  <h3>${copy.analyticsTitle}</h3>
+                  <p>${copy.analyticsBody}</p>
+                </div>
+                <button type="button" class="cookie-toggle" role="switch" aria-checked="false" data-cookie-toggle="analytics" aria-label="${copy.analyticsLabel}"></button>
+              </div>
+            </article>
+            <article class="cookie-category">
+              <div class="cookie-category-head">
+                <div>
+                  <h3>${copy.marketingTitle}</h3>
+                  <p>${copy.marketingBody}</p>
+                </div>
+                <button type="button" class="cookie-toggle" role="switch" aria-checked="false" data-cookie-toggle="marketing" aria-label="${copy.marketingLabel}"></button>
+              </div>
+            </article>
+            <p class="cookie-feedback" data-cookie-feedback></p>
+          </div>
+          <footer class="cookie-modal-footer">
+            <div class="cookie-modal-actions">
+              <button type="button" class="cookie-btn cookie-btn-secondary" data-cookie-reject>${copy.reject}</button>
+              <button type="button" class="cookie-btn cookie-btn-primary" data-cookie-save>${copy.save}</button>
+            </div>
+          </footer>
+        </section>
+      `;
+      document.body.appendChild(modal);
+
+      const closeButtons = modal.querySelectorAll('[data-cookie-close]');
+      const openButtons = document.querySelectorAll('[data-cookie-open]');
+      const toggles = Array.from(modal.querySelectorAll('[data-cookie-toggle]'));
+      const feedback = modal.querySelector('[data-cookie-feedback]');
+      const saveButton = modal.querySelector('[data-cookie-save]');
+      const rejectButton = modal.querySelector('[data-cookie-reject]');
+      let workingPreferences = getCookiePreferences();
+      let lastFocusedElement = null;
+
+      const syncToggleUi = () => {
+        toggles.forEach((toggle) => {
+          const key = toggle.getAttribute('data-cookie-toggle');
+          toggle.setAttribute('aria-checked', String(Boolean(workingPreferences[key])));
+        });
+      };
+
+      const openCookieModal = () => {
+        lastFocusedElement = document.activeElement;
+        workingPreferences = getCookiePreferences();
+        syncToggleUi();
+        if (feedback) feedback.textContent = '';
+        modal.classList.add('is-visible');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closeCookieModal = () => {
+        modal.classList.remove('is-visible');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        if (lastFocusedElement instanceof HTMLElement) {
+          lastFocusedElement.focus();
+        }
+      };
+
+      openButtons.forEach((button) => {
+        button.addEventListener('click', openCookieModal);
+      });
+
+      closeButtons.forEach((button) => {
+        button.addEventListener('click', closeCookieModal);
+      });
+
+      toggles.forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+          const key = toggle.getAttribute('data-cookie-toggle');
+          if (!key) return;
+          workingPreferences[key] = !workingPreferences[key];
+          syncToggleUi();
+        });
+      });
+
+      if (rejectButton) {
+        rejectButton.addEventListener('click', () => {
+          workingPreferences = { ...cookieDefaults };
+          syncToggleUi();
+          saveCookiePreferences(workingPreferences);
+          bootAnalytics(workingPreferences);
+          if (feedback) feedback.textContent = copy.feedbackRejected;
+          window.setTimeout(closeCookieModal, 220);
+        });
+      }
+
+      if (saveButton) {
+        saveButton.addEventListener('click', () => {
+          saveCookiePreferences(workingPreferences);
+          bootAnalytics(workingPreferences);
+          if (feedback) feedback.textContent = copy.feedbackSaved;
+          window.setTimeout(closeCookieModal, 220);
+        });
+      }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal.classList.contains('is-visible')) {
+          closeCookieModal();
+        }
+      });
     }
 
     /* --- Scroll reveal with stagger --- */
