@@ -1089,6 +1089,49 @@ async function main() {
             return fullMatch;
         });
 
+        // --- NEW: Smart Discovery Logic (Sidebar & Cross-selling) ---
+        const rankingAsins = fileAsins;
+        
+        // 1. Sidebar Results (Similar but NOT in Top)
+        // Deducir keywords del sidebar buscando el primer bloque de relacionados o el título
+        let sidebarKeywords = "";
+        const titleMatch = newContent.match(/<h1[^>]*>(.*?)<\/h1>/i);
+        if (titleMatch) {
+            sidebarKeywords = titleMatch[1].replace(/Los Mejores |Las Mejores |Mejor /gi, "").trim();
+        }
+
+        if (sidebarKeywords) {
+            const searchResults = searchDataMap[sidebarKeywords] || [];
+            const filteredSimilar = searchResults
+                .filter(item => !rankingAsins.includes(item.asin))
+                .slice(0, 4);
+            
+            if (filteredSimilar.length > 0) {
+                const serializedSimilar = JSON.stringify(filteredSimilar.map(i => ({
+                    title: i.title,
+                    image: i.image,
+                    price: i.price,
+                    url: i.url
+                })));
+                
+                const apiSectionRegex = /(<section class=["']api-products-section["'])([^>]*>)/;
+                newContent = newContent.replace(apiSectionRegex, (match, open, rest) => {
+                    if (!rest.includes('data-sidebar-results')) {
+                        fileChanged = true;
+                        return `${open} data-sidebar-results='${serializedSimilar.replace(/'/g, "&apos;")}'${rest}`;
+                    } else {
+                        // Update if different
+                        const currentMatch = rest.match(/data-sidebar-results='([^']+)'/);
+                        if (currentMatch && currentMatch[1] !== serializedSimilar.replace(/'/g, "&apos;")) {
+                            fileChanged = true;
+                            return `${open}${rest.replace(currentMatch[0], `data-sidebar-results='${serializedSimilar.replace(/'/g, "&apos;")}'`)}`;
+                        }
+                    }
+                    return match;
+                });
+            }
+        }
+
         // Update Related Products
         const regexRelated = /(<div[^>]+data-search-keywords=["']([^"']+)["'][^>]*>)([\s\S]*?)(<\/div>\s*<!-- related-end -->)/g;
         newContent = newContent.replace(regexRelated, (fullMatch, openTag, keyword, oldText, closeTag) => {
