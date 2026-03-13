@@ -220,6 +220,261 @@
       applySearch(input ? input.value : '');
     }
 
+    /* --- Catalog card enhancements --- */
+    const rankingCards = Array.from(document.querySelectorAll('.product-rank-card'));
+    if (rankingCards.length > 0) {
+      const locale = (document.documentElement.lang || 'es').toLowerCase();
+      const labelsByLocale = {
+        en: {
+          reviews: 'Read reviews',
+          similar: 'Similar products',
+          prev: 'Previous image',
+          next: 'Next image',
+          gallery: 'Product gallery'
+        },
+        fr: {
+          reviews: 'Lire les avis',
+          similar: 'Produits similaires',
+          prev: 'Image precedente',
+          next: 'Image suivante',
+          gallery: 'Galerie produit'
+        },
+        it: {
+          reviews: 'Leggi opinioni',
+          similar: 'Prodotti simili',
+          prev: 'Immagine precedente',
+          next: 'Immagine successiva',
+          gallery: 'Galleria prodotto'
+        },
+        es: {
+          reviews: 'Leer opiniones',
+          similar: 'Productos similares',
+          prev: 'Imagen anterior',
+          next: 'Imagen siguiente',
+          gallery: 'Galeria del producto'
+        }
+      };
+      const labels = labelsByLocale[locale.slice(0, 2)] || labelsByLocale.es;
+
+      const parseGalleryImages = (imageNode) => {
+        if (!imageNode) return [];
+
+        const rawValue = imageNode.getAttribute('data-gallery-images') || '';
+        let parsed = [];
+
+        if (rawValue) {
+          try {
+            const jsonValue = JSON.parse(rawValue);
+            if (Array.isArray(jsonValue)) parsed = jsonValue;
+          } catch (error) {
+            parsed = rawValue.split('|');
+          }
+        }
+
+        return [imageNode.currentSrc || imageNode.src, ...parsed]
+          .map((value) => (value || '').trim())
+          .filter(Boolean)
+          .filter((value, index, collection) => collection.indexOf(value) === index);
+      };
+
+      const createIcon = (pathD) => {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '16');
+        svg.setAttribute('height', '16');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '2');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathD);
+        svg.appendChild(path);
+        return svg;
+      };
+
+      const rankingPool = rankingCards.map((card, index) => {
+        const link = card.querySelector('.product-rank-cta');
+        const image = card.querySelector('.product-rank-image img');
+        const title = card.querySelector('.product-rank-title');
+
+        return {
+          index,
+          href: link ? link.href : '#',
+          image: image ? image.getAttribute('src') || '' : '',
+          title: title ? title.textContent.trim() : ''
+        };
+      });
+
+      rankingCards.forEach((card, currentIndex) => {
+        const interaction = card.querySelector('.product-rank-interaction');
+        const primaryCta = interaction ? interaction.querySelector('.product-rank-cta') : null;
+        const priceBlock = interaction ? interaction.querySelector('.product-rank-price') : null;
+        const imageBox = card.querySelector('.product-rank-image');
+        const imageNode = imageBox ? imageBox.querySelector('img') : null;
+
+        card.classList.add('catalog-card-enhanced');
+
+        if (interaction && primaryCta && !interaction.querySelector('.product-rank-cta-secondary')) {
+          const reviewLink = document.createElement('a');
+          const normalizedHref = primaryCta.href.includes('#') ? primaryCta.href.split('#')[0] : primaryCta.href;
+          reviewLink.href = normalizedHref.includes('amazon.') ? `${normalizedHref}#customerReviews` : normalizedHref;
+          reviewLink.className = 'product-rank-cta-secondary';
+          reviewLink.target = '_blank';
+          reviewLink.rel = 'nofollow sponsored noopener';
+          reviewLink.appendChild(createIcon('M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z'));
+          reviewLink.append(` ${labels.reviews}`);
+          primaryCta.insertAdjacentElement('afterend', reviewLink);
+        }
+
+        if (interaction && !interaction.querySelector('.amazon-logo-container')) {
+          const logoWrap = document.createElement('div');
+          logoWrap.className = 'amazon-logo-container';
+          const logo = document.createElement('img');
+          logo.src = '/assets/img/amazon-logo.svg';
+          logo.alt = 'Disponible en Amazon';
+          logoWrap.appendChild(logo);
+          interaction.appendChild(logoWrap);
+        }
+
+        if (interaction && !interaction.querySelector('.product-similar-panel')) {
+          const similarItems = rankingPool.filter((item) => item.index !== currentIndex).slice(0, 3);
+
+          if (similarItems.length > 0) {
+            const similarPanel = document.createElement('div');
+            similarPanel.className = 'product-similar-panel';
+
+            const similarTitle = document.createElement('p');
+            similarTitle.className = 'product-similar-title';
+            similarTitle.textContent = labels.similar;
+            similarPanel.appendChild(similarTitle);
+
+            const similarList = document.createElement('div');
+            similarList.className = 'product-similar-list';
+
+            similarItems.forEach((item) => {
+              const itemLink = document.createElement('a');
+              itemLink.className = 'product-similar-item';
+              itemLink.href = item.href;
+              itemLink.target = '_blank';
+              itemLink.rel = 'nofollow sponsored noopener';
+
+              const thumb = document.createElement('span');
+              thumb.className = 'product-similar-thumb';
+              const thumbImg = document.createElement('img');
+              thumbImg.src = item.image;
+              thumbImg.alt = item.title;
+              thumbImg.loading = 'lazy';
+              thumb.appendChild(thumbImg);
+
+              const name = document.createElement('span');
+              name.className = 'product-similar-name';
+              name.textContent = item.title;
+
+              itemLink.appendChild(thumb);
+              itemLink.appendChild(name);
+              similarList.appendChild(itemLink);
+            });
+
+            similarPanel.appendChild(similarList);
+            const amazonLogo = interaction.querySelector('.amazon-logo-container');
+            if (amazonLogo) {
+              interaction.insertBefore(similarPanel, amazonLogo);
+            } else {
+              interaction.appendChild(similarPanel);
+            }
+          }
+        }
+
+        if (imageBox && imageNode && !imageBox.querySelector('.product-gallery')) {
+          const galleryImages = parseGalleryImages(imageNode);
+
+          if (galleryImages.length > 1) {
+            const gallery = document.createElement('div');
+            gallery.className = 'product-gallery';
+
+            const stage = document.createElement('div');
+            stage.className = 'product-gallery-stage';
+            stage.setAttribute('aria-label', labels.gallery);
+
+            const mainImage = imageNode.cloneNode(true);
+            mainImage.classList.add('product-gallery-main');
+            mainImage.removeAttribute('data-gallery-images');
+            mainImage.removeAttribute('data-asin-image');
+
+            const counter = document.createElement('span');
+            counter.className = 'product-gallery-counter';
+
+            const thumbs = document.createElement('div');
+            thumbs.className = 'product-gallery-thumbs';
+
+            let activeIndex = 0;
+            let touchStartX = 0;
+
+            const setActiveImage = (nextIndex) => {
+              activeIndex = (nextIndex + galleryImages.length) % galleryImages.length;
+              mainImage.src = galleryImages[activeIndex];
+              counter.textContent = `${activeIndex + 1}/${galleryImages.length}`;
+
+              thumbs.querySelectorAll('.product-gallery-thumb').forEach((thumbButton, thumbIndex) => {
+                thumbButton.classList.toggle('is-active', thumbIndex === activeIndex);
+                thumbButton.setAttribute('aria-pressed', String(thumbIndex === activeIndex));
+              });
+            };
+
+            ['prev', 'next'].forEach((direction) => {
+              const button = document.createElement('button');
+              button.type = 'button';
+              button.className = `product-gallery-nav ${direction}`;
+              button.setAttribute('aria-label', direction === 'prev' ? labels.prev : labels.next);
+              button.textContent = direction === 'prev' ? '‹' : '›';
+              button.addEventListener('click', () => {
+                setActiveImage(activeIndex + (direction === 'next' ? 1 : -1));
+              });
+              stage.appendChild(button);
+            });
+
+            galleryImages.forEach((src, thumbIndex) => {
+              const thumbButton = document.createElement('button');
+              thumbButton.type = 'button';
+              thumbButton.className = 'product-gallery-thumb';
+              thumbButton.setAttribute('aria-label', `${labels.gallery} ${thumbIndex + 1}`);
+              const thumbImage = document.createElement('img');
+              thumbImage.src = src;
+              thumbImage.alt = imageNode.alt;
+              thumbImage.loading = 'lazy';
+              thumbButton.appendChild(thumbImage);
+              thumbButton.addEventListener('click', () => setActiveImage(thumbIndex));
+              thumbs.appendChild(thumbButton);
+            });
+
+            stage.addEventListener('touchstart', (event) => {
+              touchStartX = event.changedTouches[0].clientX;
+            }, { passive: true });
+
+            stage.addEventListener('touchend', (event) => {
+              const deltaX = event.changedTouches[0].clientX - touchStartX;
+              if (Math.abs(deltaX) < 30) return;
+              setActiveImage(activeIndex + (deltaX < 0 ? 1 : -1));
+            }, { passive: true });
+
+            stage.appendChild(mainImage);
+            stage.appendChild(counter);
+            gallery.appendChild(stage);
+            gallery.appendChild(thumbs);
+
+            imageBox.textContent = '';
+            imageBox.appendChild(gallery);
+            setActiveImage(0);
+          }
+        }
+
+        if (interaction && priceBlock) {
+          interaction.insertBefore(priceBlock, interaction.firstChild);
+        }
+      });
+    }
+
     /* --- Footer privacy center --- */
     const cookieStorageKey = 'descanso-inteligente-cookie-preferences';
     const analyticsMeasurementId = 'G-B06YM5N4P8';
