@@ -337,55 +337,6 @@
           interaction.appendChild(logoWrap);
         }
 
-        if (interaction && !interaction.querySelector('.product-similar-panel')) {
-          const similarItems = rankingPool.filter((item) => item.index !== currentIndex).slice(0, 3);
-
-          if (similarItems.length > 0) {
-            const similarPanel = document.createElement('div');
-            similarPanel.className = 'product-similar-panel';
-
-            const similarTitle = document.createElement('p');
-            similarTitle.className = 'product-similar-title';
-            similarTitle.textContent = labels.similar;
-            similarPanel.appendChild(similarTitle);
-
-            const similarList = document.createElement('div');
-            similarList.className = 'product-similar-list';
-
-            similarItems.forEach((item) => {
-              const itemLink = document.createElement('a');
-              itemLink.className = 'product-similar-item';
-              itemLink.href = item.href;
-              itemLink.target = '_blank';
-              itemLink.rel = 'nofollow sponsored noopener';
-
-              const thumb = document.createElement('span');
-              thumb.className = 'product-similar-thumb';
-              const thumbImg = document.createElement('img');
-              thumbImg.src = item.image;
-              thumbImg.alt = item.title;
-              thumbImg.loading = 'lazy';
-              thumb.appendChild(thumbImg);
-
-              const name = document.createElement('span');
-              name.className = 'product-similar-name';
-              name.textContent = item.title;
-
-              itemLink.appendChild(thumb);
-              itemLink.appendChild(name);
-              similarList.appendChild(itemLink);
-            });
-
-            similarPanel.appendChild(similarList);
-            const amazonLogo = interaction.querySelector('.amazon-logo-container');
-            if (amazonLogo) {
-              interaction.insertBefore(similarPanel, amazonLogo);
-            } else {
-              interaction.appendChild(similarPanel);
-            }
-          }
-        }
-
         if (imageBox && imageNode && !imageBox.querySelector('.product-gallery')) {
           const galleryImages = parseGalleryImages(imageNode);
 
@@ -473,6 +424,85 @@
           interaction.insertBefore(priceBlock, interaction.firstChild);
         }
       });
+
+      /* --- Single Sidebar for Similar Products --- */
+      const catalogSection = document.querySelector('.api-products-section');
+      if (catalogSection && rankingPool.length > 1) {
+        // Create grid wrapper
+        const mainGrid = document.createElement('div');
+        mainGrid.className = 'catalog-main-grid';
+        
+        // Create ranking container
+        const rankingContainer = document.createElement('div');
+        rankingContainer.className = 'ranking-container';
+        
+        // Move cards into container
+        const cards = Array.from(catalogSection.children).filter(el => el.classList.contains('product-rank-card'));
+        cards.forEach(card => rankingContainer.appendChild(card));
+        
+        // Create sidebar
+        const sidebar = document.createElement('aside');
+        sidebar.className = 'catalog-sidebar';
+        
+        // Similar products panel
+        const similarPanel = document.createElement('div');
+        similarPanel.className = 'sidebar-panel';
+        
+        const similarTitle = document.createElement('p');
+        similarTitle.className = 'product-similar-title';
+        similarTitle.textContent = labels.similar;
+        similarPanel.appendChild(similarTitle);
+        
+        const similarList = document.createElement('div');
+        similarList.className = 'product-similar-list';
+        
+        // Take top 3-4 products for sidebar
+        const sidebarItems = rankingPool.slice(0, 4);
+        sidebarItems.forEach((item) => {
+          const itemLink = document.createElement('a');
+          itemLink.className = 'product-similar-item';
+          itemLink.href = item.href;
+          itemLink.target = '_blank';
+          itemLink.rel = 'nofollow sponsored noopener';
+          
+          const thumb = document.createElement('span');
+          thumb.className = 'product-similar-thumb';
+          const thumbImg = document.createElement('img');
+          thumbImg.src = item.image;
+          thumbImg.alt = item.title;
+          thumbImg.loading = 'lazy';
+          thumb.appendChild(thumbImg);
+          
+          const name = document.createElement('span');
+          name.className = 'product-similar-name';
+          name.textContent = item.title;
+          
+          itemLink.appendChild(thumb);
+          itemLink.appendChild(name);
+          similarList.appendChild(itemLink);
+        });
+        
+        similarPanel.appendChild(similarList);
+        
+        // Amazon official logo at bottom of sidebar
+        const amazonLogo = document.createElement('div');
+        amazonLogo.className = 'amazon-logo-container';
+        amazonLogo.style.marginTop = '1rem';
+        const logoImg = document.createElement('img');
+        logoImg.src = '/assets/img/amazon-logo.svg';
+        logoImg.alt = 'Amazon';
+        amazonLogo.appendChild(logoImg);
+        similarPanel.appendChild(amazonLogo);
+        
+        sidebar.appendChild(similarPanel);
+        
+        // Build the grid
+        mainGrid.appendChild(rankingContainer);
+        mainGrid.appendChild(sidebar);
+        
+        // Insert into section
+        catalogSection.appendChild(mainGrid);
+      }
     }
 
     /* --- Footer privacy center --- */

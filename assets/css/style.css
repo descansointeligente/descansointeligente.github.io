@@ -3349,4 +3349,69 @@ h4 {
   justify-content: center;
 }
 
+/* =====================================================
+   Catalog Layout enhancements (Sidebar)
+   ===================================================== */
+.catalog-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.catalog-sidebar {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidebar-panel {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-panel .product-similar-title {
+  margin-top: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  border-bottom: 2px solid var(--amazon-orange);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sidebar-panel .product-similar-list {
+  margin-top: 1rem;
+}
+
+.sidebar-panel .product-similar-item {
+  background: var(--surface-alt);
+  margin-bottom: 0.75rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.sidebar-panel .product-similar-item:hover {
+  transform: translateX(5px);
+  border-color: var(--amazon-orange);
+}
+
+@media (max-width: 1024px) {
+  .catalog-main-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .catalog-sidebar {
+    position: static;
+    order: 2;
+  }
+}
+
 /* Remove duplicated block */
+
