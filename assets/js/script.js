@@ -456,12 +456,25 @@
         const similarList = document.createElement('div');
         similarList.className = 'product-similar-list';
         
-        // Take top 3-4 products for sidebar
-        const sidebarItems = rankingPool.slice(0, 4);
+        // Take products from API results if available, otherwise fallback to ranking
+        let sidebarItems = [];
+        const apiDataRaw = catalogSection.getAttribute('data-sidebar-results');
+        if (apiDataRaw) {
+          try {
+            sidebarItems = JSON.parse(apiDataRaw.replace(/&apos;/g, "'"));
+          } catch (e) {
+            console.error("Error parsing sidebar results", e);
+          }
+        }
+        
+        if (sidebarItems.length === 0) {
+          sidebarItems = rankingPool.slice(0, 4);
+        }
+
         sidebarItems.forEach((item) => {
           const itemLink = document.createElement('a');
           itemLink.className = 'product-similar-item';
-          itemLink.href = item.href;
+          itemLink.href = item.url || item.href;
           itemLink.target = '_blank';
           itemLink.rel = 'nofollow sponsored noopener';
           
