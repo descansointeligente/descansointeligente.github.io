@@ -14,6 +14,7 @@ Esta carpeta define skills reutilizables para trabajar el proyecto sin depender 
 - `prepublish-audit.md`: revisar una URL o archivo antes de publicar.
 - `amazon-compliance.md`: auditar enlaces, disclaimers, precios e imagenes de afiliacion.
 - `freshness-update.md`: actualizar bloques dinamicos, ASINs y oportunidades de refresh.
+- `spanish-language.md`: asegurar que el asistente responda siempre en castellano.
 
 ## Flujo recomendado
 
