@@ -721,9 +721,25 @@ async function main() {
     const regexPriceInfo = /data-asin=["']([^"']+)["']/g;
     const regexSearchKeywords = /<div[^>]+data-search-keywords=["']([^"']+)["'][^>]*>/g;
     const regexImageInfo = /data-asin-image=["']([^"']+)["']/g;
+    const regexH1 = /<h1[^>]*>([\s\S]*?)<\/h1>/i;
 
     for (const file of htmlFiles) {
         let content = fs.readFileSync(file, 'utf8');
+        
+        // Extract sidebar keywords from H1 (Fix A: Smart Discovery)
+        const h1Match = content.match(regexH1);
+        if (h1Match) {
+            const sidebarKeyword = h1Match[1]
+                .replace(/<[^>]*>/g, '') // Remove any nested tags
+                .replace(/Los Mejores |Las Mejores |Mejor |Mejores /gi, "")
+                .trim();
+            if (sidebarKeyword) {
+                // We want at least 4 items for the sidebar
+                const previousCount = keywordsToSearch.get(sidebarKeyword) || 0;
+                keywordsToSearch.set(sidebarKeyword, Math.max(previousCount, 4));
+            }
+        }
+
         let match;
         while ((match = regexPriceInfo.exec(content)) !== null) {
             asinsToFetch.add(match[1]);
@@ -1097,7 +1113,10 @@ async function main() {
         let sidebarKeywords = "";
         const titleMatch = newContent.match(/<h1[^>]*>(.*?)<\/h1>/i);
         if (titleMatch) {
-            sidebarKeywords = titleMatch[1].replace(/Los Mejores |Las Mejores |Mejor /gi, "").trim();
+            sidebarKeywords = titleMatch[1]
+                .replace(/<[^>]*>/g, '') 
+                .replace(/Los Mejores |Las Mejores |Mejor |Mejores /gi, "")
+                .trim();
         }
 
         if (sidebarKeywords) {
@@ -1107,6 +1126,7 @@ async function main() {
                 .slice(0, 4);
             
             if (filteredSimilar.length > 0) {
+                console.log(`${colors.blue}  -> Sidebar: Found ${filteredSimilar.length} similar products for '${sidebarKeywords}'${colors.reset}`);
                 const serializedSimilar = JSON.stringify(filteredSimilar.map(i => ({
                     title: i.title,
                     image: i.image,

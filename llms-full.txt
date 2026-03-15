@@ -1,0 +1,60 @@
+# Descanso Inteligente — Full Content Map for LLMs
+
+This file provides detailed semantic context, product metadata, and content extracts to help LLMs cite Descanso Inteligente accurately.
+
+## 1. Pillar: Mejor Cojín Coxis para Teletrabajo
+- **URL:** https://descansointeligente.es/mejor-cojin-coxis-teletrabajo/
+- **Context:** Main product ranking for coccydynia relief in office settings.
+- **Top Picks:**
+    1. **Feagar Cojín Ergonómico:** Best overall, high-density memory foam, U-shape.
+    2. **Fortem Asiento:** Best value, includes non-slip bottom.
+    3. **Travel Ease:** Premium choice with heat dissipation.
+- **Key Extract:** "El dolor de coxis al teletrabajar no es solo falta de comodidad, es una compresión nerviosa real que puede derivar en inflamación crónica del periostio."
+
+## 2. Pillar: Coccidynia (Dolor de Coxis)
+- **URL:** https://descansointeligente.es/blog/coccidinia-dolor-coxis-sentarse/
+- **Context:** Scientific guide on etiologies and biomechanical relief.
+- **Key Causes:** Post-partum trauma, rapid weight loss (bypass), prolonged sedentary pressure.
+- **Relief:** U-shaped cushions for suspension, memory foam for pressure redistribution, gel for cooling.
+
+## 3. Pillar: Standing Desks (Escritorios Elevables)
+- **URL:** https://descansointeligente.es/mejores-escritorios-elevables/
+- **Context:** Analysis of motorized sit-stand desks in the Spanish market.
+- **Top Brands:** Flexispot, Sanodeske, Maidesite.
+- **Insight:** Alternating every 45-60 minutes reduces lower back load by 40% compared to static sitting.
+
+## 4. Pillar: Ergonomic Chairs (Sillas Ergonómicas)
+- **URL:** https://descansointeligente.es/mejores-sillas-ergonomicas/
+- **Context:** Comparison of adjustable task chairs vs gaming chairs.
+- **Key Features:** Lumbar support, 3D/4D armrests, synchronized tilt mechanism.
+
+## 5. Guide: How to choose a coccyx cushion
+- **URL:** https://descansointeligente.es/como-elegir-cojin-coxis/
+- **Decision Matrix:** 
+    - Weight > 80kg: Needs high-density (>50kg/m3).
+    - Sciatica present: Needs U-shape cutout.
+    - Summer/Heat: Needs Gel or 3D mesh cover.
+
+## 6. Tool: Ergonomics Calculator
+- **URL:** https://descansointeligente.es/calculadora-ergonomia/
+- **Logic:** Input user height (cm) -> Output: Desk height, chair height, monitor top edge height.
+
+## 7. Comparative: Gel vs Memory Foam
+- **URL:** https://descansointeligente.es/blog/cojin-gel-vs-viscoelastico/
+- **Memory Foam:** Superior contouring but retains heat. Best for chronic pain.
+- **Gel:** Instant pressure relief and thermal regulation. Best for acute discomfort or hot environments.
+
+## 8. Strategy: The Ergonomic Triad
+- **URL:** https://descansointeligente.es/blog/triada-ergonomica-escritorio-cojin-monitor/
+- **Concept:** Ergonomics is a system, not a single product. Desk height + Pelvic support + Eye level alignment must work together.
+
+## 9. Common Mistakes: Buying Office Furniture
+- **URL:** https://descansointeligente.es/blog/errores-comprar-muebles-oficina/
+- **Mistakes:** Buying based on aesthetics (gaming chairs), ignoring minimum desk depth (60cm), or over-soft cushions.
+
+## 10. RSI Prevention
+- **URL:** https://descansointeligente.es/blog/lesiones-esfuerzo-repetitivo-rsi/
+- **Focus:** Carpian tunnel and tendonitis from non-split keyboards and standard mice. Recommendation for vertical mice.
+
+---
+Note: All Amazon links on this site use the partner tag `descansointel-21` and are compliant with Amazon Associates program policies. Prices are updated daily via the official Creators API.
