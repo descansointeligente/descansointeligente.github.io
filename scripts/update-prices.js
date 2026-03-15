@@ -170,6 +170,27 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Retry wrapper for API calls — handles HTTP 429 (rate limit) with exponential backoff
+ */
+async function requestJsonWithRetry(urlString, options = {}, body = null, maxRetries = 3) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await requestJson(urlString, options, body);
+        } catch (error) {
+            const is429 = error.message && error.message.includes('HTTP 429');
+            const isTimeout = error.message && error.message.includes('timeout');
+            if ((is429 || isTimeout) && attempt < maxRetries) {
+                const backoffMs = Math.min(2000 * Math.pow(2, attempt), 15000);
+                console.warn(`${colors.yellow}[RETRY ${attempt + 1}/${maxRetries}] Rate limited or timeout. Waiting ${backoffMs}ms...${colors.reset}`);
+                await delay(backoffMs);
+                continue;
+            }
+            throw error;
+        }
+    }
+}
+
 function requestJson(urlString, options = {}, body = null) {
     return new Promise((resolve, reject) => {
         const url = new URL(urlString);
@@ -289,7 +310,7 @@ async function creatorsApiPost(endpointPath, payload) {
         headers.Version = AMAZON_CREATOR_VERSION;
     }
 
-    return requestJson(`${AMAZON_API_BASE_URL}${endpointPath}`, {
+    return requestJsonWithRetry(`${AMAZON_API_BASE_URL}${endpointPath}`, {
         method: 'POST',
         headers
     }, JSON.stringify(payload));
@@ -384,6 +405,8 @@ async function getItemsBatch(asins) {
             'images.variants.medium',
             'itemInfo.title',
             'offersV2.listings.price',
+            'offersV2.listings.savingBasis',
+            'offersV2.listings.savings',
             'offersV2.listings.availability',
             'offersV2.listings.dealDetails',
             'offersV2.listings.isBuyBoxWinner',
@@ -652,7 +675,7 @@ async function searchRelatedProducts(keyword, itemCount = 3) {
             }
 
             if (mergedResults.length >= itemCount) break;
-            await delay(250);
+            await delay(750);
         }
 
         return mergedResults.length > 0 ? mergedResults.slice(0, itemCount) : null;
@@ -725,24 +748,14 @@ async function main() {
 
     for (const file of htmlFiles) {
         let content = fs.readFileSync(file, 'utf8');
-        
-        // Extract sidebar keywords from H1 (Fix A: Smart Discovery)
-        const h1Match = content.match(regexH1);
-        if (h1Match) {
-            const sidebarKeyword = h1Match[1]
-                .replace(/<[^>]*>/g, '') // Remove any nested tags
-                .replace(/Los Mejores |Las Mejores |Mejor |Mejores /gi, "")
-                .trim();
-            if (sidebarKeyword) {
-                // We want at least 4 items for the sidebar
-                const previousCount = keywordsToSearch.get(sidebarKeyword) || 0;
-                keywordsToSearch.set(sidebarKeyword, Math.max(previousCount, 4));
-            }
-        }
+
+        // Track if this page has product data (ASINs) — only those get H1 sidebar keywords
+        const fileAsinsLocal = new Set();
 
         let match;
         while ((match = regexPriceInfo.exec(content)) !== null) {
             asinsToFetch.add(match[1]);
+            fileAsinsLocal.add(match[1]);
         }
         while ((match = regexSearchKeywords.exec(content)) !== null) {
             const keyword = match[1].trim();
@@ -754,6 +767,23 @@ async function main() {
         }
         while ((match = regexImageInfo.exec(content)) !== null) {
             asinsToFetch.add(match[1]);
+            fileAsinsLocal.add(match[1]);
+        }
+
+        // Extract sidebar keywords from H1 ONLY for pages that have products
+        // This prevents garbage keywords from legal, contact, blog template pages
+        if (fileAsinsLocal.size > 0 || content.includes('api-products-section')) {
+            const h1Match = content.match(regexH1);
+            if (h1Match) {
+                const sidebarKeyword = h1Match[1]
+                    .replace(/<[^>]*>/g, '')
+                    .replace(/Los Mejores |Las Mejores |Mejor |Mejores /gi, "")
+                    .trim();
+                if (sidebarKeyword && sidebarKeyword.length > 3 && !sidebarKeyword.includes('{{')) {
+                    const previousCount = keywordsToSearch.get(sidebarKeyword) || 0;
+                    keywordsToSearch.set(sidebarKeyword, Math.max(previousCount, 4));
+                }
+            }
         }
     }
 
@@ -799,6 +829,16 @@ async function main() {
         try {
             const data = await getItemsBatch(batch);
 
+            // Diagnostic: log the top-level keys of the API response to detect structure mismatches
+            const responseKeys = data ? Object.keys(data) : [];
+            console.log(`${colors.blue}[DIAG] getItems response keys: [${responseKeys.join(', ')}]${colors.reset}`);
+            if (data.itemResults) {
+                console.log(`${colors.blue}[DIAG] itemResults keys: [${Object.keys(data.itemResults).join(', ')}], items count: ${Array.isArray(data.itemResults.items) ? data.itemResults.items.length : 'NOT_ARRAY'}${colors.reset}`);
+            } else {
+                // Try alternative response structures
+                console.warn(`${colors.yellow}[DIAG] No 'itemResults' found. Full response (first 500 chars): ${JSON.stringify(data).substring(0, 500)}${colors.reset}`);
+            }
+
             if (Array.isArray(data.errors) && data.errors.length > 0) {
                 console.error(`${colors.yellow}[PARTIAL ERRORS] ${JSON.stringify(data.errors)}${colors.reset}`);
             }
@@ -824,7 +864,7 @@ async function main() {
                 }
             }
 
-            await delay(500);
+            await delay(1500);
         } catch (e) {
             summary.batchFailures++;
             console.error(`${colors.red}Failed to fetch batch ${batch.join(', ')}: ${e.message}${colors.reset}`);
@@ -840,7 +880,7 @@ async function main() {
                     } else {
                         summary.missingAsins++;
                     }
-                    await delay(250);
+                    await delay(1000);
                 } catch (singleError) {
                     summary.batchFailures++;
                     summary.missingAsins++;
@@ -862,7 +902,7 @@ async function main() {
                     summary.searchHits += results.length;
                     console.log(`${colors.green}  -> Found ${results.length} related products.${colors.reset}`);
                 }
-                if (hasCreatorsCredentials()) await delay(500);
+                if (hasCreatorsCredentials()) await delay(1500);
             } catch (e) {
                 summary.batchFailures++;
                 console.error(`${colors.red}Failed to search ${keyword}: ${e.message}${colors.reset}`);
