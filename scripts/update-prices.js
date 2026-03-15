@@ -405,11 +405,10 @@ async function getItemsBatch(asins) {
             'images.variants.medium',
             'itemInfo.title',
             'offersV2.listings.price',
-            'offersV2.listings.savingBasis',
-            'offersV2.listings.savings',
             'offersV2.listings.availability',
             'offersV2.listings.dealDetails',
             'offersV2.listings.isBuyBoxWinner',
+            'offersV2.listings.merchantInfo',
             'offersV2.listings.condition',
             'parentASIN'
         ]
