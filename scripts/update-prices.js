@@ -541,8 +541,9 @@ async function fetchProductData(asin) {
             console.error(`${colors.red}[API ERROR] for ${asin}: ${JSON.stringify(data.errors)}${colors.reset}`);
         }
 
-        const items = data.itemResults && Array.isArray(data.itemResults.items)
-            ? data.itemResults.items
+        const itemsResult = data.itemsResult || data.itemResults || null;
+        const items = itemsResult && Array.isArray(itemsResult.items)
+            ? itemsResult.items
             : [];
         const item = items.find(entry => entry.asin === asin) || items[0];
 
@@ -828,23 +829,17 @@ async function main() {
         try {
             const data = await getItemsBatch(batch);
 
-            // Diagnostic: log the top-level keys of the API response to detect structure mismatches
-            const responseKeys = data ? Object.keys(data) : [];
-            console.log(`${colors.blue}[DIAG] getItems response keys: [${responseKeys.join(', ')}]${colors.reset}`);
-            if (data.itemResults) {
-                console.log(`${colors.blue}[DIAG] itemResults keys: [${Object.keys(data.itemResults).join(', ')}], items count: ${Array.isArray(data.itemResults.items) ? data.itemResults.items.length : 'NOT_ARRAY'}${colors.reset}`);
-            } else {
-                // Try alternative response structures
-                console.warn(`${colors.yellow}[DIAG] No 'itemResults' found. Full response (first 500 chars): ${JSON.stringify(data).substring(0, 500)}${colors.reset}`);
-            }
+            // The API returns 'itemsResult' (not 'itemResults')
+            const itemsResult = data.itemsResult || data.itemResults || null;
 
             if (Array.isArray(data.errors) && data.errors.length > 0) {
                 console.error(`${colors.yellow}[PARTIAL ERRORS] ${JSON.stringify(data.errors)}${colors.reset}`);
             }
 
-            const items = data.itemResults && Array.isArray(data.itemResults.items)
-                ? data.itemResults.items
+            const items = itemsResult && Array.isArray(itemsResult.items)
+                ? itemsResult.items
                 : [];
+            console.log(`${colors.blue}[DIAG] getItems returned ${items.length} items for batch of ${batch.length}${colors.reset}`);
             const batchAsinsFound = new Set();
             for (const item of items) {
                 const mapped = mapItemToProductData(item);
