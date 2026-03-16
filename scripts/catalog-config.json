@@ -1,0 +1,49 @@
+{
+  "categories": [
+    {
+      "id": "escritorios-elevables",
+      "label": "Escritorios Elevables",
+      "browseNodeId": "2822874031",
+      "keywords": "escritorio elevable eléctrico",
+      "searchIndex": "Kitchen",
+      "targetFile": "mejores-escritorios-elevables/index.html",
+      "itemCount": 5
+    },
+    {
+      "id": "sillas-ergonomicas",
+      "label": "Sillas Ergonómicas",
+      "browseNodeId": "2822867031",
+      "keywords": "silla ergonómica oficina",
+      "searchIndex": "Kitchen",
+      "targetFile": "mejores-sillas-ergonomicas/index.html",
+      "itemCount": 5
+    },
+    {
+      "id": "cojin-coxis",
+      "label": "Cojín para Coxis",
+      "browseNodeId": "2822877031",
+      "keywords": "cojín coxis",
+      "searchIndex": "Kitchen",
+      "targetFile": "mejor-cojin-coxis-teletrabajo/index.html",
+      "itemCount": 5
+    },
+    {
+      "id": "soporte-lumbar",
+      "label": "Soporte Lumbar",
+      "browseNodeId": "3250016031",
+      "keywords": "soporte lumbar silla oficina",
+      "searchIndex": "Kitchen",
+      "targetFile": "cojin-ortopedico-silla-oficina/index.html",
+      "itemCount": 5
+    },
+    {
+      "id": "brazos-monitor",
+      "label": "Brazos de Monitor",
+      "browseNodeId": "26957185031",
+      "keywords": "brazo monitor",
+      "searchIndex": "Computers",
+      "targetFile": "mejores-brazos-monitor/index.html",
+      "itemCount": 5
+    }
+  ]
+}
