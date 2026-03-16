@@ -3,6 +3,8 @@
     "verify:site": "node scripts/verify-site.js",
     "audit:affiliate": "node scripts/validate-affiliate-compliance.js",
     "check:creators": "node scripts/check-creators-config.js",
+    "update:catalog": "node scripts/update-catalog-rankings.js",
+    "update:catalog:dry": "node scripts/update-catalog-rankings.js --dry-run",
     "skill:list": "node scripts/skills-cli.js list",
     "skill:show": "node scripts/skills-cli.js show",
     "skill:prepublish": "node scripts/skills-cli.js prepublish",
