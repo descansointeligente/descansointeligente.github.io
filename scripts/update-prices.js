@@ -694,6 +694,9 @@ function findHtmlFiles(dir, fileList = []) {
         const filePath = path.join(dir, file);
         if (file.startsWith('.') || file === 'node_modules') return;
 
+        // Skip non-ES directories for keyword extraction/sidebar (to save API quota)
+        if (file === 'en' || file === 'fr' || file === 'it') return;
+
         const stat = fs.statSync(filePath);
         if (stat.isDirectory()) {
             findHtmlFiles(filePath, fileList);
@@ -746,8 +749,19 @@ async function main() {
     const regexImageInfo = /data-asin-image=["']([^"']+)["']/g;
     const regexH1 = /<h1[^>]*>([\s\S]*?)<\/h1>/i;
 
+    // Blog posts that shouldn't trigger product searches (informational only)
+    const informativeExclusions = [
+        'blog/regla-20-20-20-vista-cuello/index.html',
+        'blog/peligro-cruzar-piernas/index.html',
+        'blog/sindrome-tunel-carpiano-ejercicios/index.html',
+        'blog/lesiones-esfuerzo-repetitivo-rsi/index.html',
+        'blog/regla-20-20-20-vista-cuello/index.html',
+        'blog/coccidinia-dolor-coxis-sentarse/index.html'
+    ];
+
     for (const file of htmlFiles) {
         let content = fs.readFileSync(file, 'utf8');
+        const relativePath = path.relative(ROOT_DIR, file);
 
         // Track if this page has product data (ASINs) — only those get H1 sidebar keywords
         const fileAsinsLocal = new Set();
@@ -758,6 +772,7 @@ async function main() {
             fileAsinsLocal.add(match[1]);
         }
         while ((match = regexSearchKeywords.exec(content)) !== null) {
+            if (informativeExclusions.includes(relativePath)) continue;
             const keyword = match[1].trim();
             const fullTag = match[0];
             const countMatch = fullTag.match(/data-search-count=["'](\d+)["']/);
@@ -847,7 +862,13 @@ async function main() {
                     productDataMap[mapped.asin] = mapped;
                     batchAsinsFound.add(mapped.asin);
                     summary.fetchedAsins++;
-                    console.log(`${colors.green}  -> ${mapped.asin}: ${mapped.price}, Original: ${mapped.originalPrice}, Discount: ${mapped.discount}${colors.reset}`);
+                    
+                    // Detailed log for price/deals investigation
+                    let dealInfo = "";
+                    if (mapped.dealDetails) {
+                        dealInfo = ` [DEAL: ${JSON.stringify(mapped.dealDetails)}]`;
+                    }
+                    console.log(`${colors.green}  -> ${mapped.asin}: ${mapped.price}, Original: ${mapped.originalPrice}, Discount: ${mapped.discount}${dealInfo}${colors.reset}`);
                 }
             }
 
