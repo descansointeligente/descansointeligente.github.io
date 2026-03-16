@@ -1,0 +1,65 @@
+name: Update Catalog Rankings
+
+on:
+  schedule:
+    # Run every Monday at 04:00 UTC
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: update-catalog-rankings
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  update-rankings:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Creators API configuration
+        env:
+          AMAZON_CREATOR_CLIENT_ID: ${{ secrets.AMAZON_CREATOR_CLIENT_ID }}
+          AMAZON_CREATOR_CLIENT_SECRET: ${{ secrets.AMAZON_CREATOR_CLIENT_SECRET }}
+          AMAZON_CREATOR_VERSION: ${{ secrets.AMAZON_CREATOR_VERSION }}
+          AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
+          AMAZON_MARKETPLACE: www.amazon.es
+          AMAZON_LANG: es_ES
+          AMAZON_CURRENCY: EUR
+        run: npm run check:creators
+
+      - name: Update catalog rankings
+        env:
+          AMAZON_CREATOR_CLIENT_ID: ${{ secrets.AMAZON_CREATOR_CLIENT_ID }}
+          AMAZON_CREATOR_CLIENT_SECRET: ${{ secrets.AMAZON_CREATOR_CLIENT_SECRET }}
+          AMAZON_CREATOR_VERSION: ${{ secrets.AMAZON_CREATOR_VERSION }}
+          AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
+          AMAZON_MARKETPLACE: www.amazon.es
+          AMAZON_LANG: es_ES
+          AMAZON_CURRENCY: EUR
+        run: node scripts/update-catalog-rankings.js --strict
+
+      - name: Run affiliate compliance audit
+        run: npm run audit:affiliate
+
+      - name: Run site verification
+        run: npm run verify:site
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: update catalog rankings [skip ci]"
+          file_pattern: "*.html"
