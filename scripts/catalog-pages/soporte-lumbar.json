@@ -1,0 +1,34 @@
+{
+  "id": "soporte-lumbar",
+  "slug": "cojin-ortopedico-silla-oficina",
+  "emoji": "🛡️",
+  "title": "Mejor Cojín Ortopédico para Silla de Oficina | Descanso Inteligente",
+  "metaDescription": "Descubre los mejores soportes lumbares y cojines ortopédicos para silla de oficina. Ranking actualizado para aliviar el dolor de espalda en el teletrabajo.",
+  "schemaName": "Mejores Soportes Lumbares",
+  "schemaDescription": "Ranking actualizado de los mejores soportes lumbares y cojines ortopédicos para silla de oficina en España",
+  "breadcrumb": "Soporte Lumbar",
+  "h1": "Los Mejores Soportes Lumbares",
+  "heroText": "Tu silla de oficina probablemente no tiene el soporte lumbar que necesitas. Un cojín ortopédico o soporte lumbar adaptable es la forma más rápida y económica de transformar cualquier silla en una silla ergonómica.",
+  "ogImage": "/assets/img/og-soporte-lumbar.jpg",
+  "benefits": {
+    "title": "Beneficios de un soporte lumbar",
+    "intro": "La zona lumbar es la más castigada durante las horas de oficina. Un soporte adecuado marca la diferencia.",
+    "items": [
+      {
+        "title": "Soporte para la Lordosis Natural",
+        "text": "Rellena el hueco entre tu espalda baja y el respaldo de la silla, manteniendo la curva lumbar sin esfuerzo."
+      },
+      {
+        "title": "Compatible con Cualquier Silla",
+        "text": "A diferencia de comprar una silla nueva, un soporte lumbar transforma tu silla actual en segundos con correas ajustables."
+      }
+    ]
+  },
+  "buyingGuide": null,
+  "infoBox": null,
+  "faq": null,
+  "relatedProducts": {
+    "intro": "Combina tu soporte lumbar con estos accesorios para crear un setup completamente ergonómico.",
+    "keywords": "cojin coxis | silla ergonomica | reposapies oficina | escritorio elevable"
+  }
+}

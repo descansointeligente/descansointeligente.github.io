@@ -1,0 +1,34 @@
+{
+  "id": "sillas-ergonomicas",
+  "slug": "mejores-sillas-ergonomicas",
+  "emoji": "🪑",
+  "title": "Las Mejores Sillas Ergonómicas para Teletrabajo | Descanso Inteligente",
+  "metaDescription": "Descubre las mejores sillas ergonómicas de oficina para teletrabajo. Ranking actualizado con soporte lumbar, reposabrazos ajustable y malla transpirable.",
+  "schemaName": "Mejores Sillas Ergonómicas",
+  "schemaDescription": "Ranking actualizado de las mejores sillas ergonómicas para oficina y teletrabajo en España",
+  "breadcrumb": "Sillas Ergonómicas",
+  "h1": "Las Mejores Sillas Ergonómicas",
+  "heroText": "Tu silla de oficina es el mueble donde más horas pasas al día. Una silla ergonómica profesional con soporte lumbar adaptable y reposabrazos ajustable protege tu espalda y multiplica tu productividad.",
+  "ogImage": "/assets/img/og-sillas-ergonomicas.jpg",
+  "benefits": {
+    "title": "Beneficios de una silla ergonómica profesional",
+    "intro": "Invertir en una silla de calidad no es un gasto, sino una medida de prevención para tu salud a largo plazo.",
+    "items": [
+      {
+        "title": "Soporte Lumbar Activo",
+        "text": "Un buen respaldo ergonómico se adapta a la curvatura natural de tu columna, manteniendo la lordosis lumbar sin esfuerzo consciente."
+      },
+      {
+        "title": "Ajuste Personalizado",
+        "text": "Altura del asiento, profundidad, inclinación del respaldo y reposabrazos 3D permiten configurar la silla exactamente a tu cuerpo."
+      }
+    ]
+  },
+  "buyingGuide": null,
+  "infoBox": null,
+  "faq": null,
+  "relatedProducts": {
+    "intro": "Para completar un setup ergonómico de teletrabajo, combina tu silla con estos accesorios esenciales.",
+    "keywords": "reposapies oficina | cojin coxis ergonomico | brazo monitor | escritorio elevable"
+  }
+}
