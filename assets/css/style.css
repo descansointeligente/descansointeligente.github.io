@@ -1660,10 +1660,15 @@ h4 {
 }
 
 .product-rank-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   margin: 0 0 0.5rem;
   color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
 }
 
 .product-rank-price {
@@ -1713,7 +1718,12 @@ h4 {
   padding-left: 1.4rem;
   margin-bottom: 0.4rem;
   color: var(--text-secondary);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
 }
 
 .product-rank-features li::before {

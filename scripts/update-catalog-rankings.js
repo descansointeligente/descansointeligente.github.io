@@ -251,6 +251,28 @@ function collectGalleryImages(images) {
         .filter((val, idx, arr) => arr.indexOf(val) === idx);
 }
 
+// ── Title truncation ────────────────────────────────────────────────────────
+function truncateTitle(title, maxLen = 65) {
+    if (!title || title.length <= maxLen) return title;
+
+    // Try to cut at a natural separator (comma, hyphen, pipe, parenthesis)
+    const separators = [', ', ' - ', ' | ', ' — ', ' ('];
+    for (const sep of separators) {
+        const idx = title.indexOf(sep, 30); // don't cut too early
+        if (idx > 0 && idx <= maxLen) {
+            return title.slice(0, idx);
+        }
+    }
+
+    // Fallback: cut at last space before maxLen
+    const spaceIdx = title.lastIndexOf(' ', maxLen);
+    if (spaceIdx > 20) {
+        return title.slice(0, spaceIdx) + '...';
+    }
+
+    return title.slice(0, maxLen) + '...';
+}
+
 // ── Parse API item into product data ────────────────────────────────────────
 function parseOfferListing(listing) {
     if (!listing) {
@@ -287,23 +309,26 @@ function mapItemToProductData(item) {
     const parsed = parseOfferListing(listing);
     const galleryImages = collectGalleryImages(item?.images);
 
-    // Extract features
+    // Extract features — truncate to keep cards compact
     const features = [];
     if (item?.itemInfo?.features?.displayValues && Array.isArray(item.itemInfo.features.displayValues)) {
         for (const feat of item.itemInfo.features.displayValues) {
             if (feat && features.length < 3) {
-                // Truncate very long features
                 const clean = String(feat).replace(/<[^>]+>/g, '').trim();
                 if (clean.length > 0) {
-                    features.push(clean.length > 120 ? clean.slice(0, 117) + '...' : clean);
+                    features.push(clean.length > 80 ? clean.slice(0, 77) + '...' : clean);
                 }
             }
         }
     }
 
+    // Truncate title — Amazon titles are very long, keep only the meaningful part
+    const rawTitle = item?.itemInfo?.title?.displayValue || item?.asin || 'Producto Amazon';
+    const truncatedTitle = truncateTitle(rawTitle);
+
     return {
         asin: item?.asin || null,
-        title: item?.itemInfo?.title?.displayValue || item?.asin || 'Producto Amazon',
+        title: truncatedTitle,
         detailPageURL: item?.detailPageURL || null,
         price: parsed.price || 'Ver en Amazon',
         originalPrice: parsed.originalPrice,
