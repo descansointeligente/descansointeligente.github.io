@@ -1,0 +1,54 @@
+{
+  "id": "escritorios-elevables",
+  "slug": "mejores-escritorios-elevables",
+  "emoji": "⚡",
+  "title": "Los Mejores Escritorios Elevables (Standing Desk)",
+  "metaDescription": "Compara y descubre los mejores escritorios elevables eléctricos con memoria de posiciones. Rankings actualizados automáticamente del mercado para tu teletrabajo.",
+  "schemaName": "Mejores Escritorios Elevables",
+  "schemaDescription": "Ranking actualizado de los mejores escritorios elevables eléctricos en España",
+  "breadcrumb": "Escritorios Elevables",
+  "h1": "Los Mejores Escritorios Elevables",
+  "heroText": "Alternar posturas entre sentado y de pie es el cambio de hábito que más impacto tiene sobre tu espalda. Un standing desk con motor eléctrico te permite ajustar la altura con un botón, sin interrumpir tu flujo de trabajo.",
+  "ogImage": "/assets/img/og-escritorios-elevables.jpg",
+  "benefits": {
+    "title": "Beneficios de trabajar en un Standing Desk",
+    "intro": "Alternar entre estar sentado y de pie no solo quema más calorías, sino que reduce drásticamente la carga estática en los discos lumbares.",
+    "items": [
+      {
+        "title": "Reducción del Dolor de Espalda",
+        "text": "Aliviar la presión constante de la postura sentada ayuda a mitigar dolores crónicos y mejora la oxigenación muscular."
+      },
+      {
+        "title": "Mayor Energía y Enfoque",
+        "text": "Trabajar de pie durante intervalos aumenta el flujo sanguíneo, lo que se traduce en una mayor claridad mental y productividad."
+      }
+    ]
+  },
+  "buyingGuide": {
+    "intro": "Antes de comprar un escritorio elevable, ten en cuenta los siguientes factores para asegurarte de que encaje en tu espacio y necesidades:",
+    "sections": [
+      {
+        "title": "Rango de altura",
+        "text": "La altura máxima y mínima son cruciales. Asegúrate de que, en su posición más baja, la mesa quede a la altura de tus codos mientras estás sentado y, en su posición más alta, quede a la altura de tus codos mientras estás de pie. Puedes usar nuestra <a href=\"/calculadora-ergonomia/\">Calculadora de Ergonomía</a> para conocer tus medidas exactas."
+      },
+      {
+        "title": "Capacidad de carga",
+        "text": "Si usas varios monitores, un brazo de monitor pesado y otros accesorios, necesitarás un escritorio con motores robustos que soporten más de 70 kg."
+      },
+      {
+        "title": "Estabilidad y tambaleo",
+        "text": "Un buen escritorio elevable debe mantenerse firme incluso en su altura máxima. Busca modelos con patas anchas y materiales duraderos (acero)."
+      },
+      {
+        "title": "Memoria de posiciones",
+        "text": "Los teclados de control con memoria te permiten guardar tus alturas preferidas. Esto hace que cambiar de postura sea instantáneo y cómodo."
+      }
+    ]
+  },
+  "infoBox": null,
+  "faq": null,
+  "relatedProducts": {
+    "intro": "Para exprimir al máximo un escritorio elevable, estos accesorios son los que realmente marcan la diferencia en un setup profesional.",
+    "keywords": "brazo monitor | silla ergonomica | alfombrilla raton grande | cojin coxis"
+  }
+}

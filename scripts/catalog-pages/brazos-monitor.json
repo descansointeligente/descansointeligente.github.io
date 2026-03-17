@@ -1,0 +1,34 @@
+{
+  "id": "brazos-monitor",
+  "slug": "mejores-brazos-monitor",
+  "emoji": "🖥️",
+  "title": "Los Mejores Brazos de Monitor y Soportes Articulados | Descanso Inteligente",
+  "metaDescription": "Eleva la pantalla a la altura de tus ojos. Encuentra el mejor brazo de monitor articulado (doble o simple) y alivia la tensión cervical.",
+  "schemaName": "Mejores Brazos de Monitor",
+  "schemaDescription": "Ranking actualizado de los mejores brazos y soportes articulados para monitor en España",
+  "breadcrumb": "Brazos de Monitor",
+  "h1": "Los Mejores Brazos de Monitor",
+  "heroText": "Libera espacio en tu escritorio y coloca tu pantalla a la altura exacta recomendada para tu estatura. Un buen soporte articulado elimina la tensión cervical y los dolores de cuello que genera el monitor en posición baja.",
+  "ogImage": "/assets/img/og-brazos-monitor.jpg",
+  "benefits": {
+    "title": "Beneficios de elevar tu monitor",
+    "intro": "Un brazo de monitor no es solo una cuestión de estética o espacio; es una de las mejoras más directas para evitar la fatiga visual y cervical.",
+    "items": [
+      {
+        "title": "Altura Ergonómica Real",
+        "text": "Permite situar el borde superior de la pantalla a la altura de tus ojos, manteniendo el cuello en una posición neutra y relajada."
+      },
+      {
+        "title": "Espacio de Trabajo Libre",
+        "text": "Al eliminar la peana original del monitor, recuperas valiosos centímetros de escritorio para tus otros periféricos o tareas manuales."
+      }
+    ]
+  },
+  "buyingGuide": null,
+  "infoBox": "<p style=\"margin: 0; font-size: 0.95rem;\">💡 <strong>¿No sabes cómo colocar tu monitor?</strong> Consulta nuestra <a href=\"/blog/como-elegir-brazo-monitor/\">Guía completa para elegir y ajustar tu brazo de monitor</a> — incluye la fórmula para calcular la altura ideal según tu estatura.</p>",
+  "faq": null,
+  "relatedProducts": {
+    "intro": "Cuando elevas la pantalla, el siguiente salto en ergonomía suele estar en la altura del escritorio y los apoyos que descargan brazos y zona lumbar.",
+    "keywords": "escritorio elevable | raton ergonomico | silla ergonomica | alfombrilla raton grande"
+  }
+}
