@@ -44,6 +44,24 @@
       "searchIndex": "Computers",
       "targetFile": "mejores-brazos-monitor/index.html",
       "itemCount": 5
+    },
+    {
+      "id": "almohadillas-raton",
+      "label": "Almohadillas de Ratón Ergonómicas",
+      "browseNodeId": "937819031",
+      "keywords": "alfombrilla ratón ergonómica reposamuñecas",
+      "searchIndex": "Computers",
+      "targetFile": "mejores-almohadillas-raton-ergonomicas/index.html",
+      "itemCount": 5
+    },
+    {
+      "id": "almohadillas-muneca",
+      "label": "Almohadillas de Muñeca Ergonómicas",
+      "browseNodeId": "4352927031",
+      "keywords": "reposamuñecas teclado ergonómico gel",
+      "searchIndex": "OfficeProducts",
+      "targetFile": "mejores-almohadillas-muneca-ergonomicas/index.html",
+      "itemCount": 5
     }
   ]
 }

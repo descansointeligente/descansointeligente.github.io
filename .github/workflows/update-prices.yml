@@ -62,4 +62,5 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore: update amazon prices [skip ci]"
-          file_pattern: "*.html"
+          file_pattern: '*.html'
+          disable_globbing: true
